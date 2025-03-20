@@ -19,8 +19,8 @@ struct IngredientSearchView: View {
                 .background(Color(.systemGray6))
                 .cornerRadius(10)
                 .padding(.horizontal)
-                .onChange(of: searchText) { _ in
-                    viewModel.searchIngredient(query: searchText)
+                .onChange(of: searchText) { _, newValue in
+                    viewModel.searchIngredient(query: newValue)
                 }
             
             // Résultats de recherche
@@ -106,4 +106,5 @@ struct IngredientSearchView: View {
             onIngredientSelected: { _ in }
         )
     }
+    .modelContainer(container)
 }

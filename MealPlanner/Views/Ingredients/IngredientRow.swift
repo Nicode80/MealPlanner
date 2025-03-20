@@ -27,5 +27,6 @@ struct IngredientRow: View {
     
     return IngredientRow(ingredient: ingredient)
         .padding()
+        .previewDisplayName("Ingredient Row Preview")
         .previewLayout(.sizeThatFits)
 }
