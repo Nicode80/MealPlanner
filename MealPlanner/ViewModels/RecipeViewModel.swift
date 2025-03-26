@@ -1,10 +1,18 @@
 import Foundation
 import SwiftData
+import SwiftUI
+import Observation
 
-class RecipeViewModel: ObservableObject {
+@Observable
+class RecipeViewModel {
     private var modelContext: ModelContext
     
-    @Published var recipes: [Recipe] = []
+    var recipes: [Recipe] = []
+    
+    // Pour la création d'une nouvelle recette
+    var newRecipeName = ""
+    var newRecipeDetails = ""
+    var newRecipePhotoData: Data?
     
     init(modelContext: ModelContext) {
         self.modelContext = modelContext
@@ -20,16 +28,40 @@ class RecipeViewModel: ObservableObject {
         }
     }
     
-    func addRecipe(name: String, details: String? = nil, photo: Data? = nil) -> Recipe {
-        let recipe = Recipe(name: name, details: details, photo: photo)
+    func createRecipe() -> Recipe? {
+        guard !newRecipeName.isEmpty else { return nil }
+        
+        let recipe = Recipe(
+            name: newRecipeName,
+            details: newRecipeDetails.isEmpty ? nil : newRecipeDetails,
+            photo: newRecipePhotoData
+        )
+        
         modelContext.insert(recipe)
-        saveContext()
+        try? modelContext.save()
         fetchRecipes()
+        
+        // Réinitialiser les champs
+        resetNewRecipeFields()
+        
         return recipe
     }
     
+    func resetNewRecipeFields() {
+        newRecipeName = ""
+        newRecipeDetails = ""
+        newRecipePhotoData = nil
+    }
+    
     func addIngredientToRecipe(recipe: Recipe, ingredient: Ingredient, quantity: Double, isOptional: Bool = false) {
-        let recipeIngredient = RecipeIngredient(recipe: recipe, ingredient: ingredient, quantity: quantity, isOptional: isOptional)
+        let recipeIngredient = RecipeIngredient(
+            recipe: recipe,
+            ingredient: ingredient,
+            quantity: quantity,
+            isOptional: isOptional
+        )
+        
+        modelContext.insert(recipeIngredient)
         
         if recipe.ingredients == nil {
             recipe.ingredients = [recipeIngredient]
@@ -37,25 +69,29 @@ class RecipeViewModel: ObservableObject {
             recipe.ingredients?.append(recipeIngredient)
         }
         
-        saveContext()
+        try? modelContext.save()
+    }
+    
+    func removeIngredientFromRecipe(recipe: Recipe, recipeIngredient: RecipeIngredient) {
+        if let index = recipe.ingredients?.firstIndex(where: { $0.id == recipeIngredient.id }) {
+            recipe.ingredients?.remove(at: index)
+            modelContext.delete(recipeIngredient)
+            try? modelContext.save()
+        }
     }
     
     func deleteRecipe(_ recipe: Recipe) {
         modelContext.delete(recipe)
-        saveContext()
+        try? modelContext.save()
         fetchRecipes()
     }
     
-    func updateRecipe(_ recipe: Recipe) {
-        saveContext()
+    func updateRecipe(_ recipe: Recipe, name: String, details: String, photo: Data?) {
+        recipe.name = name
+        recipe.details = details.isEmpty ? nil : details
+        recipe.photo = photo
+        
+        try? modelContext.save()
         fetchRecipes()
-    }
-    
-    private func saveContext() {
-        do {
-            try modelContext.save()
-        } catch {
-            print("Erreur lors de la sauvegarde du contexte: \(error)")
-        }
     }
 }

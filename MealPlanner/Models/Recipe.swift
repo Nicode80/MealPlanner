@@ -17,3 +17,10 @@ final class Recipe {
         self.photo = photo
     }
 }
+
+// Extension pour ajouter des fonctionnalités utiles
+extension Recipe {
+    var hasIngredients: Bool {
+        return ingredients?.isEmpty == false
+    }
+}
