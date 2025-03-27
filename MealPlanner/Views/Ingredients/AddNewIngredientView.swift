@@ -14,6 +14,7 @@ struct AddNewIngredientView: View {
     @State private var showingSimilarIngredientAlert = false
     @State private var similarIngredient: Ingredient?
     @State private var nameEdited = false
+    @State private var attemptedToAdd = false
     
     var body: some View {
         NavigationView {
@@ -22,6 +23,11 @@ struct AddNewIngredientView: View {
                     TextField("Nom", text: $name)
                         .onChange(of: name) { oldValue, newValue in
                             nameEdited = true
+                            // Vérifier les similitudes dès que le nom change
+                            // si l'utilisateur a tapé au moins 3 caractères
+                            if newValue.count >= 3 {
+                                checkForSimilarIngredient()
+                            }
                         }
                         .onSubmit {
                             checkForSimilarIngredient()
@@ -33,7 +39,7 @@ struct AddNewIngredientView: View {
                         }
                     }
                     .onChange(of: category) { _, _ in
-                        if nameEdited {
+                        if nameEdited && name.count >= 3 {
                             checkForSimilarIngredient()
                         }
                     }
@@ -44,7 +50,7 @@ struct AddNewIngredientView: View {
                         }
                     }
                     .onChange(of: unit) { _, _ in
-                        if nameEdited {
+                        if nameEdited && name.count >= 3 {
                             checkForSimilarIngredient()
                         }
                     }
@@ -59,9 +65,17 @@ struct AddNewIngredientView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Ajouter") {
-                        if let ingredient = addIngredient() {
-                            onIngredientCreated(ingredient)
-                            dismiss()
+                        attemptedToAdd = true
+                        // Vérifier une dernière fois avant d'ajouter
+                        if let similar = viewModel.checkForSimilarIngredient(name: name) {
+                            similarIngredient = similar
+                            showingSimilarIngredientAlert = true
+                        } else {
+                            // Aucun doublon, on peut ajouter
+                            if let ingredient = addIngredient() {
+                                onIngredientCreated(ingredient)
+                                dismiss()
+                            }
                         }
                     }
                     .disabled(name.isEmpty || category.isEmpty || unit.isEmpty)
@@ -71,14 +85,25 @@ struct AddNewIngredientView: View {
                 Alert(
                     title: Text("Ingrédient similaire trouvé"),
                     message: Text("Vouliez-vous dire \"\(similarIngredient?.name ?? "")\"?"),
-                    primaryButton: .default(Text("Oui")) {
+                    primaryButton: .default(Text("Oui, utiliser existant")) {
                         if let ingredient = similarIngredient {
                             // Utiliser l'ingrédient existant
                             onIngredientCreated(ingredient)
                             dismiss()
                         }
                     },
-                    secondaryButton: .cancel(Text("Non, créer nouveau"))
+                    secondaryButton: .cancel(Text("Non, créer nouveau")) {
+                        if attemptedToAdd {
+                            // L'utilisateur a explicitement refusé la suggestion lors de l'ajout
+                            // On force la création d'un nouvel ingrédient
+                            let newIngredient = Ingredient(name: name, category: category, unit: unit)
+                            modelContext.insert(newIngredient)
+                            try? modelContext.save()
+                            viewModel.fetchIngredients()
+                            onIngredientCreated(newIngredient)
+                            dismiss()
+                        }
+                    }
                 )
             }
         }

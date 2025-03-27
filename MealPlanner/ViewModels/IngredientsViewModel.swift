@@ -78,15 +78,29 @@ class IngredientsViewModel {
         
         let normalizedName = normalizeString(name)
         
-        // Vérifier les correspondances exactes
-        if let exactMatch = ingredients.first(where: { normalizeString($0.name) == normalizedName }) {
+        // Vérifier d'abord les correspondances exactes ou très proches
+        if let exactMatch = ingredients.first(where: {
+            let ingredientName = normalizeString($0.name)
+            return ingredientName == normalizedName ||
+                   ingredientName.replacingOccurrences(of: "s", with: "") == normalizedName.replacingOccurrences(of: "s", with: "") // Gère singulier/pluriel
+        }) {
             return exactMatch
         }
         
-        // Vérifier les noms similaires
+        // Vérifier les noms similaires avec une distance plus stricte
         let similarIngredients = ingredients.filter { ingredient in
             let distance = levenshteinDistance(normalizedName, normalizeString(ingredient.name))
-            return distance <= 2 && distance > 0 // Proche mais pas identique
+            return distance <= 1 && distance > 0 // Plus strict : seulement 1 caractère de différence
+        }
+        
+        // Si aucun résultat avec distance 1, essayer avec une distance de 2
+        if similarIngredients.isEmpty {
+            let lessSimilarIngredients = ingredients.filter { ingredient in
+                let distance = levenshteinDistance(normalizedName, normalizeString(ingredient.name))
+                // Pour les noms plus longs, une distance de 2 peut être pertinente
+                return distance <= 2 && distance > 1 && normalizedName.count > 4
+            }
+            return lessSimilarIngredients.first
         }
         
         return similarIngredients.first
@@ -109,9 +123,8 @@ class IngredientsViewModel {
             return nil
         }
         
-        // Vérifier si l'ingrédient existe déjà (correspondance exacte)
-        let normalizedName = normalizeString(name)
-        if let existingIngredient = ingredients.first(where: { normalizeString($0.name) == normalizedName }) {
+        // Vérifier doublon avant création - utilise la même logique que checkForSimilarIngredient
+        if let existingIngredient = checkForSimilarIngredient(name: name) {
             return existingIngredient
         }
         
