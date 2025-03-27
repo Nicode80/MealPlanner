@@ -3,7 +3,7 @@ import SwiftData
 
 struct RecipeDetailView: View {
     @Environment(\.modelContext) private var modelContext
-    @Bindable var recipe: Recipe  // Remplacé @ObservedObject par @Bindable
+    @Bindable var recipe: Recipe
     @State private var showingAddIngredient = false
     @State private var showingEditRecipe = false
     
@@ -104,7 +104,24 @@ struct RecipeDetailView: View {
             }
         }
         .sheet(isPresented: $showingAddIngredient) {
-            AddRecipeIngredientView(recipe: recipe)
+            // Remplacé AddRecipeIngredientView par IngredientSelectionView
+            IngredientSelectionView(onIngredientSelected: { ingredient, quantity, isOptional in
+                // Utiliser le modelContext pour ajouter l'ingrédient à la recette
+                let recipeIngredient = RecipeIngredient(
+                    recipe: recipe,
+                    ingredient: ingredient,
+                    quantity: quantity,
+                    isOptional: isOptional
+                )
+                
+                modelContext.insert(recipeIngredient)
+                
+                if recipe.ingredients == nil {
+                    recipe.ingredients = [recipeIngredient]
+                } else {
+                    recipe.ingredients?.append(recipeIngredient)
+                }
+            })
         }
         .sheet(isPresented: $showingEditRecipe) {
             EditRecipeView(recipe: recipe)
@@ -116,105 +133,6 @@ struct RecipeDetailView: View {
             recipe.ingredients?.remove(at: index)
             modelContext.delete(recipeIngredient)
         }
-    }
-}
-
-struct AddRecipeIngredientView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Environment(\.dismiss) private var dismiss
-    @Bindable var recipe: Recipe  // Remplacé @ObservedObject par @Bindable
-    
-    @State private var selectedIngredient: Ingredient?
-    @State private var quantity: Double = 1.0
-    @State private var isOptional: Bool = false
-    @State private var searchText = ""
-    
-    @Query private var ingredients: [Ingredient]
-    
-    var filteredIngredients: [Ingredient] {
-        if searchText.isEmpty {
-            return ingredients
-        } else {
-            return ingredients.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
-        }
-    }
-    
-    var body: some View {
-        NavigationView {
-            Form {
-                Section(header: Text("Rechercher un ingrédient")) {
-                    TextField("Nom de l'ingrédient", text: $searchText)
-                }
-                
-                Section(header: Text("Ingrédients")) {
-                    List(filteredIngredients) { ingredient in
-                        Button {
-                            selectedIngredient = ingredient
-                        } label: {
-                            HStack {
-                                Text(ingredient.name)
-                                Spacer()
-                                if selectedIngredient?.id == ingredient.id {
-                                    Image(systemName: "checkmark")
-                                        .foregroundColor(.blue)
-                                }
-                            }
-                        }
-                        .foregroundColor(.primary)
-                    }
-                }
-                
-                Section(header: Text("Quantité")) {
-                    HStack {
-                        Text("Quantité par personne")
-                        Spacer()
-                        TextField("Quantité", value: $quantity, format: .number)
-                            .keyboardType(.decimalPad)
-                            .multilineTextAlignment(.trailing)
-                            .frame(width: 80)
-                        Text(selectedIngredient?.unit ?? "")
-                    }
-                    
-                    Toggle("Ingrédient optionnel", isOn: $isOptional)
-                }
-                
-                Section {
-                    Button("Ajouter à la recette") {
-                        addIngredientToRecipe()
-                    }
-                    .disabled(selectedIngredient == nil)
-                }
-            }
-            .navigationTitle("Ajouter un ingrédient")
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Annuler") {
-                        dismiss()
-                    }
-                }
-            }
-        }
-    }
-    
-    private func addIngredientToRecipe() {
-        guard let ingredient = selectedIngredient else { return }
-        
-        let recipeIngredient = RecipeIngredient(
-            recipe: recipe,
-            ingredient: ingredient,
-            quantity: quantity,
-            isOptional: isOptional
-        )
-        
-        modelContext.insert(recipeIngredient)
-        
-        if recipe.ingredients == nil {
-            recipe.ingredients = [recipeIngredient]
-        } else {
-            recipe.ingredients?.append(recipeIngredient)
-        }
-        
-        dismiss()
     }
 }
 

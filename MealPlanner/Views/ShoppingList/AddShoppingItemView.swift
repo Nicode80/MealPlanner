@@ -9,7 +9,7 @@ struct AddShoppingItemView: View {
     
     @State private var selectedIngredient: Ingredient?
     @State private var quantity: Double = 1.0
-    @State private var showingIngredientSearch = false
+    @State private var showingIngredientSelection = false
     
     @Query private var ingredients: [Ingredient]
     
@@ -22,12 +22,12 @@ struct AddShoppingItemView: View {
                             Text(ingredient.name)
                             Spacer()
                             Button("Changer") {
-                                showingIngredientSearch = true
+                                showingIngredientSelection = true
                             }
                         }
                     } else {
                         Button("Sélectionner un ingrédient") {
-                            showingIngredientSearch = true
+                            showingIngredientSelection = true
                         }
                     }
                 }
@@ -61,12 +61,12 @@ struct AddShoppingItemView: View {
                     }
                 }
             }
-            .sheet(isPresented: $showingIngredientSearch) {
-                IngredientSearchView(
-                    viewModel: IngredientsViewModel(modelContext: modelContext),
-                    onIngredientSelected: { ingredient in
+            .sheet(isPresented: $showingIngredientSelection) {
+                IngredientSelectionView(
+                    onIngredientSelected: { ingredient, selectedQuantity, _ in
                         selectedIngredient = ingredient
-                        showingIngredientSearch = false
+                        quantity = selectedQuantity
+                        showingIngredientSelection = false
                     }
                 )
             }
@@ -105,27 +105,29 @@ struct AddShoppingItemView: View {
     }
 }
 
-#Preview {
-    let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(
-        for: Recipe.self, Ingredient.self, RecipeIngredient.self,
-        ShoppingList.self, ShoppingListItem.self,
-        configurations: config
-    )
-    
-    let context = container.mainContext
-    
-    // Créer un exemple de liste de courses
-    let shoppingList = ShoppingList()
-    context.insert(shoppingList)
-    
-    // Créer quelques ingrédients
-    let carotte = Ingredient(name: "Carotte", category: "Fruits et légumes", unit: "pièce(s)")
-    let tomate = Ingredient(name: "Tomate", category: "Fruits et légumes", unit: "pièce(s)")
-    
-    context.insert(carotte)
-    context.insert(tomate)
-    
-    return AddShoppingItemView(shoppingList: shoppingList)
-        .modelContainer(container)
+struct AddShoppingItemView_Previews: PreviewProvider {
+    static var previews: some View {
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try! ModelContainer(
+            for: Recipe.self, Ingredient.self, RecipeIngredient.self,
+            ShoppingList.self, ShoppingListItem.self,
+            configurations: config
+        )
+        
+        let context = container.mainContext
+        
+        // Créer un exemple de liste de courses
+        let shoppingList = ShoppingList()
+        context.insert(shoppingList)
+        
+        // Créer quelques ingrédients
+        let carotte = Ingredient(name: "Carotte", category: "Fruits et légumes", unit: "pièce(s)")
+        let tomate = Ingredient(name: "Tomate", category: "Fruits et légumes", unit: "pièce(s)")
+        
+        context.insert(carotte)
+        context.insert(tomate)
+        
+        return AddShoppingItemView(shoppingList: shoppingList)
+            .modelContainer(container)
+    }
 }

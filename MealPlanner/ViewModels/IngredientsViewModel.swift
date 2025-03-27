@@ -1,12 +1,35 @@
 import Foundation
 import SwiftData
+import SwiftUI
+import Observation
 
-class IngredientsViewModel: ObservableObject {
+@Observable
+class IngredientsViewModel {
     private var modelContext: ModelContext
     
-    @Published var ingredients: [Ingredient] = []
-    @Published var searchResults: [Ingredient] = []
-    @Published var similarIngredientSuggestions: [Ingredient] = []
+    // Liste des ingrédients existants
+    var ingredients: [Ingredient] = []
+    var selectedIngredient: Ingredient?
+    
+    // Champs pour la création d'un nouvel ingrédient
+    var newIngredientName: String = ""
+    var newIngredientCategory: String = "Fruits et légumes"
+    var newIngredientUnit: String = "pièce(s)"
+    
+    // Recherche et filtrage
+    var searchText: String = ""
+    var searchResults: [Ingredient] = []
+    var similarIngredientSuggestions: [Ingredient] = []
+    
+    // Catégories prédéfinies
+    let categories = [
+        "Fruits et légumes", "Viandes", "Poissons et fruits de mer",
+        "Produits laitiers", "Boulangerie", "Épicerie sucrée",
+        "Épicerie salée", "Boissons", "Surgelés", "Hygiène"
+    ]
+    
+    // Unités prédéfinies
+    let units = ["g", "kg", "ml", "l", "pièce(s)", "tranche(s)", "cuillère(s) à café", "cuillère(s) à soupe"]
     
     init(modelContext: ModelContext) {
         self.modelContext = modelContext
@@ -17,6 +40,8 @@ class IngredientsViewModel: ObservableObject {
         let descriptor = FetchDescriptor<Ingredient>(sortBy: [SortDescriptor(\.name)])
         do {
             ingredients = try modelContext.fetch(descriptor)
+            // Initialiser les résultats de recherche avec tous les ingrédients
+            searchResults = ingredients
         } catch {
             print("Erreur lors de la récupération des ingrédients: \(error)")
         }
@@ -24,8 +49,10 @@ class IngredientsViewModel: ObservableObject {
     
     // Recherche d'ingrédients avec gestion des similitudes
     func searchIngredient(query: String) {
+        searchText = query
+        
         guard !query.isEmpty else {
-            searchResults = []
+            searchResults = ingredients
             similarIngredientSuggestions = []
             return
         }
@@ -33,18 +60,36 @@ class IngredientsViewModel: ObservableObject {
         let normalizedQuery = normalizeString(query)
         
         // Recherche exacte d'abord (insensible à la casse)
-        let exactResults = ingredients.filter {
+        searchResults = ingredients.filter {
             normalizeString($0.name).contains(normalizedQuery)
         }
         
-        searchResults = exactResults
-        
         // Si pas de résultat exact, chercher des similitudes
-        if exactResults.isEmpty {
+        if searchResults.isEmpty {
             findSimilarIngredients(to: query)
         } else {
             similarIngredientSuggestions = []
         }
+    }
+    
+    // Vérification de l'existence d'un nom similaire
+    func checkForSimilarIngredient(name: String) -> Ingredient? {
+        guard !name.isEmpty else { return nil }
+        
+        let normalizedName = normalizeString(name)
+        
+        // Vérifier les correspondances exactes
+        if let exactMatch = ingredients.first(where: { normalizeString($0.name) == normalizedName }) {
+            return exactMatch
+        }
+        
+        // Vérifier les noms similaires
+        let similarIngredients = ingredients.filter { ingredient in
+            let distance = levenshteinDistance(normalizedName, normalizeString(ingredient.name))
+            return distance <= 2 && distance > 0 // Proche mais pas identique
+        }
+        
+        return similarIngredients.first
     }
     
     // Trouve des ingrédients similaires à une chaîne donnée
@@ -58,8 +103,12 @@ class IngredientsViewModel: ObservableObject {
         }
     }
     
-    // Ajoute un nouvel ingrédient avec vérification des similitudes
+    // Ajoute un nouvel ingrédient
     func addIngredient(name: String, category: String, unit: String) -> Ingredient? {
+        guard !name.isEmpty && !category.isEmpty && !unit.isEmpty else {
+            return nil
+        }
+        
         // Vérifier si l'ingrédient existe déjà (correspondance exacte)
         let normalizedName = normalizeString(name)
         if let existingIngredient = ingredients.first(where: { normalizeString($0.name) == normalizedName }) {
@@ -69,9 +118,19 @@ class IngredientsViewModel: ObservableObject {
         // Si l'ingrédient n'existe pas, le créer
         let newIngredient = Ingredient(name: name, category: category, unit: unit)
         modelContext.insert(newIngredient)
-        saveContext()
+        try? modelContext.save()
         fetchIngredients()
+        
+        // Réinitialiser les champs
+        resetNewIngredientFields()
+        
         return newIngredient
+    }
+    
+    func resetNewIngredientFields() {
+        newIngredientName = ""
+        newIngredientCategory = "Fruits et légumes"
+        newIngredientUnit = "pièce(s)"
     }
     
     // Fusionne deux ingrédients (conserve le premier et supprime le second)
@@ -92,8 +151,13 @@ class IngredientsViewModel: ObservableObject {
         
         // Supprimer l'ingrédient en double
         modelContext.delete(remove)
-        saveContext()
+        try? modelContext.save()
         fetchIngredients()
+    }
+    
+    // Récupérer les ingrédients groupés par catégorie
+    var ingredientsByCategory: [String: [Ingredient]] {
+        Dictionary(grouping: searchResults) { $0.category }
     }
     
     // Normalisation des chaînes pour comparaisons
@@ -141,13 +205,5 @@ class IngredientsViewModel: ObservableObject {
         }
         
         return matrix[aCount][bCount]
-    }
-    
-    private func saveContext() {
-        do {
-            try modelContext.save()
-        } catch {
-            print("Erreur lors de la sauvegarde du contexte: \(error)")
-        }
     }
 }
