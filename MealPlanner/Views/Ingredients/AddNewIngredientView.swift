@@ -6,6 +6,7 @@ struct AddNewIngredientView: View {
     @Environment(\.modelContext) private var modelContext
     
     var viewModel: IngredientsViewModel
+    var forRecipe: Bool = true
     var onIngredientCreated: (Ingredient) -> Void
     
     @State private var name: String = ""
@@ -34,7 +35,7 @@ struct AddNewIngredientView: View {
                         }
                     
                     Picker("Catégorie", selection: $category) {
-                        ForEach(viewModel.categories, id: \.self) { category in
+                        ForEach(viewModel.getCategories(forRecipe: forRecipe), id: \.self) { category in
                             Text(category).tag(category)
                         }
                     }
@@ -53,6 +54,14 @@ struct AddNewIngredientView: View {
                         if nameEdited && name.count >= 3 {
                             checkForSimilarIngredient()
                         }
+                    }
+                }
+                
+                if forRecipe {
+                    Section(header: Text("Remarque")) {
+                        Text("Cet ingrédient sera utilisé dans les recettes. Assurez-vous qu'il s'agit bien d'un aliment.")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                     }
                 }
             }

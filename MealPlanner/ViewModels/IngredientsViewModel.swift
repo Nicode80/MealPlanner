@@ -21,8 +21,15 @@ class IngredientsViewModel {
     var searchResults: [Ingredient] = []
     var similarIngredientSuggestions: [Ingredient] = []
     
-    // Catégories prédéfinies
-    let categories = [
+    // Catégories pour les ingrédients alimentaires (sans Hygiène pour les recettes)
+    let foodCategories = [
+        "Fruits et légumes", "Viandes", "Poissons et fruits de mer",
+        "Produits laitiers", "Boulangerie", "Épicerie sucrée",
+        "Épicerie salée", "Boissons", "Surgelés"
+    ]
+    
+    // Toutes les catégories (incluant Hygiène pour la liste de courses)
+    let allCategories = [
         "Fruits et légumes", "Viandes", "Poissons et fruits de mer",
         "Produits laitiers", "Boulangerie", "Épicerie sucrée",
         "Épicerie salée", "Boissons", "Surgelés", "Hygiène"
@@ -30,6 +37,9 @@ class IngredientsViewModel {
     
     // Unités prédéfinies
     let units = ["g", "kg", "ml", "l", "pièce(s)", "tranche(s)", "cuillère(s) à café", "cuillère(s) à soupe"]
+    
+    // Unités qui doivent utiliser des valeurs décimales (pas de 0.1)
+    let decimalUnits = ["kg", "l"]
     
     init(modelContext: ModelContext) {
         self.modelContext = modelContext
@@ -47,12 +57,35 @@ class IngredientsViewModel {
         }
     }
     
+    // Obtenir les catégories appropriées selon le contexte
+    func getCategories(forRecipe: Bool = true) -> [String] {
+        return forRecipe ? foodCategories : allCategories
+    }
+    
+    // Déterminer si une unité utilise des valeurs décimales
+    func isDecimalUnit(_ unit: String) -> Bool {
+        return decimalUnits.contains(unit)
+    }
+    
+    // Obtenir le pas d'incrémentation pour une unité donnée
+    func getStepValue(for unit: String) -> Double {
+        return isDecimalUnit(unit) ? 0.1 : 1.0
+    }
+    
+    // Obtenir les ingrédients alimentaires (exclure la catégorie Hygiène)
+    func getFoodIngredients() -> [Ingredient] {
+        return ingredients.filter { !$0.category.contains("Hygiène") }
+    }
+    
     // Recherche d'ingrédients avec gestion des similitudes
-    func searchIngredient(query: String) {
+    func searchIngredient(query: String, forRecipe: Bool = true) {
         searchText = query
         
+        // Base d'ingrédients à filtrer (tous ou seulement alimentaires)
+        let baseIngredients = forRecipe ? getFoodIngredients() : ingredients
+        
         guard !query.isEmpty else {
-            searchResults = ingredients
+            searchResults = baseIngredients
             similarIngredientSuggestions = []
             return
         }
@@ -60,13 +93,13 @@ class IngredientsViewModel {
         let normalizedQuery = normalizeString(query)
         
         // Recherche exacte d'abord (insensible à la casse)
-        searchResults = ingredients.filter {
+        searchResults = baseIngredients.filter {
             normalizeString($0.name).contains(normalizedQuery)
         }
         
         // Si pas de résultat exact, chercher des similitudes
         if searchResults.isEmpty {
-            findSimilarIngredients(to: query)
+            findSimilarIngredients(to: query, in: baseIngredients)
         } else {
             similarIngredientSuggestions = []
         }
@@ -107,11 +140,11 @@ class IngredientsViewModel {
     }
     
     // Trouve des ingrédients similaires à une chaîne donnée
-    private func findSimilarIngredients(to query: String) {
+    private func findSimilarIngredients(to query: String, in baseIngredients: [Ingredient]) {
         let normalizedQuery = normalizeString(query)
         
         // Filtre les ingrédients dont la distance de Levenshtein est faible
-        similarIngredientSuggestions = ingredients.filter { ingredient in
+        similarIngredientSuggestions = baseIngredients.filter { ingredient in
             let normalizedName = normalizeString(ingredient.name)
             return levenshteinDistance(normalizedQuery, normalizedName) <= 2 // Tolérance de 2 caractères
         }

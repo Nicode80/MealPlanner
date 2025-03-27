@@ -10,8 +10,14 @@ struct IngredientSelectionView: View {
     @State private var isOptional: Bool = false
     @State private var showingAddNewIngredient = false
     @State private var selectedCategoryFilter: String?
+    @State private var forRecipeContext: Bool = true // Par défaut, on est dans le contexte d'une recette
     
     var onIngredientSelected: (Ingredient, Double, Bool) -> Void
+    
+    init(forRecipe: Bool = true, onIngredientSelected: @escaping (Ingredient, Double, Bool) -> Void) {
+        self.onIngredientSelected = onIngredientSelected
+        self._forRecipeContext = State(initialValue: forRecipe)
+    }
     
     var body: some View {
         NavigationView {
@@ -20,7 +26,7 @@ struct IngredientSelectionView: View {
                     // Barre de recherche
                     TextField("Rechercher un ingrédient", text: Binding(
                         get: { vm.searchText },
-                        set: { vm.searchIngredient(query: $0) }
+                        set: { vm.searchIngredient(query: $0, forRecipe: forRecipeContext) }
                     ))
                     .padding(8)
                     .background(Color(.systemGray6))
@@ -41,7 +47,7 @@ struct IngredientSelectionView: View {
                                     .cornerRadius(20)
                             }
                             
-                            ForEach(vm.categories, id: \.self) { category in
+                            ForEach(vm.getCategories(forRecipe: forRecipeContext), id: \.self) { category in
                                 Button {
                                     selectedCategoryFilter = category
                                 } label: {
@@ -131,19 +137,57 @@ struct IngredientSelectionView: View {
                     
                     // Options pour l'ingrédient sélectionné
                     if let selectedIngredient = vm.selectedIngredient {
-                        VStack {
+                        VStack(spacing: 16) {
                             Divider()
                             
+                            Text("Quantité pour 1 personne")
+                                .font(.headline)
+                                .frame(maxWidth: .infinity, alignment: .center)
+                            
+                            // Sélecteur de quantité avec boutons + et -
                             HStack {
-                                Text("Quantité:")
+                                Button(action: {
+                                    let step = vm.getStepValue(for: selectedIngredient.unit)
+                                    quantity = max(step, quantity - step)
+                                }) {
+                                    Image(systemName: "minus.circle.fill")
+                                        .font(.title2)
+                                        .foregroundColor(.blue)
+                                }
+                                
                                 Spacer()
-                                TextField("Quantité", value: $quantity, format: .number)
-                                    .keyboardType(.decimalPad)
-                                    .multilineTextAlignment(.trailing)
-                                    .frame(width: 80)
-                                Text(selectedIngredient.unit)
+                                
+                                if vm.isDecimalUnit(selectedIngredient.unit) {
+                                    // Pour kg/l, afficher avec une décimale
+                                    TextField("Quantité", value: $quantity, format: .number.precision(.fractionLength(1)))
+                                        .keyboardType(.decimalPad)
+                                        .multilineTextAlignment(.center)
+                                        .frame(width: 80)
+                                } else {
+                                    // Pour les autres unités, afficher en nombres entiers
+                                    TextField("Quantité", value: $quantity, format: .number)
+                                        .keyboardType(.numberPad)
+                                        .multilineTextAlignment(.center)
+                                        .frame(width: 80)
+                                }
+                                
+                                Spacer()
+                                
+                                Button(action: {
+                                    let step = vm.getStepValue(for: selectedIngredient.unit)
+                                    quantity += step
+                                }) {
+                                    Image(systemName: "plus.circle.fill")
+                                        .font(.title2)
+                                        .foregroundColor(.blue)
+                                }
                             }
                             .padding(.horizontal)
+                            
+                            // Unité de mesure
+                            Text(selectedIngredient.unit)
+                                .foregroundColor(.secondary)
+                                .frame(maxWidth: .infinity, alignment: .center)
                             
                             Toggle("Ingrédient optionnel", isOn: $isOptional)
                                 .padding(.horizontal)
@@ -162,6 +206,7 @@ struct IngredientSelectionView: View {
                             }
                             .padding(.bottom)
                         }
+                        .padding(.top)
                         .background(Color(.systemBackground))
                     }
                 } else {
@@ -180,6 +225,7 @@ struct IngredientSelectionView: View {
                 if let vm = viewModel {
                     AddNewIngredientView(
                         viewModel: vm,
+                        forRecipe: forRecipeContext,
                         onIngredientCreated: { ingredient in
                             vm.selectedIngredient = ingredient
                             vm.fetchIngredients()
@@ -191,6 +237,8 @@ struct IngredientSelectionView: View {
                 print("IngredientSelectionView appeared")
                 if viewModel == nil {
                     viewModel = IngredientsViewModel(modelContext: modelContext)
+                    // Initialiser la recherche avec les bons filtres
+                    viewModel?.searchIngredient(query: "", forRecipe: forRecipeContext)
                 }
             }
         }

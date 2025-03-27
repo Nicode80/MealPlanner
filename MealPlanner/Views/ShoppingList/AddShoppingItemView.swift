@@ -32,17 +32,51 @@ struct AddShoppingItemView: View {
                     }
                 }
                 
-                if selectedIngredient != nil {
+                if let ingredient = selectedIngredient {
                     Section(header: Text("Quantité")) {
+                        // Sélecteur de quantité avec boutons + et -
                         HStack {
-                            Text("Quantité")
+                            Button(action: {
+                                let step = getStepValue(for: ingredient.unit)
+                                quantity = max(step, quantity - step)
+                            }) {
+                                Image(systemName: "minus.circle.fill")
+                                    .font(.title2)
+                                    .foregroundColor(.blue)
+                            }
+                            
                             Spacer()
-                            TextField("Quantité", value: $quantity, format: .number)
-                                .keyboardType(.decimalPad)
-                                .multilineTextAlignment(.trailing)
-                                .frame(width: 80)
-                            Text(selectedIngredient?.unit ?? "")
+                            
+                            if isDecimalUnit(ingredient.unit) {
+                                // Pour kg/l, afficher avec une décimale
+                                TextField("Quantité", value: $quantity, format: .number.precision(.fractionLength(1)))
+                                    .keyboardType(.decimalPad)
+                                    .multilineTextAlignment(.center)
+                                    .frame(width: 80)
+                            } else {
+                                // Pour les autres unités, afficher en nombres entiers
+                                TextField("Quantité", value: $quantity, format: .number)
+                                    .keyboardType(.numberPad)
+                                    .multilineTextAlignment(.center)
+                                    .frame(width: 80)
+                            }
+                            
+                            Spacer()
+                            
+                            Button(action: {
+                                let step = getStepValue(for: ingredient.unit)
+                                quantity += step
+                            }) {
+                                Image(systemName: "plus.circle.fill")
+                                    .font(.title2)
+                                    .foregroundColor(.blue)
+                            }
                         }
+                        
+                        // Unité de mesure
+                        Text(ingredient.unit)
+                            .foregroundColor(.secondary)
+                            .frame(maxWidth: .infinity, alignment: .center)
                     }
                 }
                 
@@ -63,6 +97,7 @@ struct AddShoppingItemView: View {
             }
             .sheet(isPresented: $showingIngredientSelection) {
                 IngredientSelectionView(
+                    forRecipe: false,  // Important: indique qu'on n'est pas dans le contexte d'une recette
                     onIngredientSelected: { ingredient, selectedQuantity, _ in
                         selectedIngredient = ingredient
                         quantity = selectedQuantity
@@ -102,6 +137,16 @@ struct AddShoppingItemView: View {
         shoppingList.modificationDate = Date()
         
         dismiss()
+    }
+    
+    // Détermine si une unité utilise des valeurs décimales
+    private func isDecimalUnit(_ unit: String) -> Bool {
+        return ["kg", "l"].contains(unit)
+    }
+    
+    // Obtient le pas d'incrémentation pour une unité donnée
+    private func getStepValue(for unit: String) -> Double {
+        return isDecimalUnit(unit) ? 0.1 : 1.0
     }
 }
 
