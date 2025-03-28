@@ -17,7 +17,6 @@ struct ShoppingListView: View {
             return [:]
         }
         
-        // Simplification de l'expression pour éviter l'erreur de type-checking
         var result = [String: [ShoppingListItem]]()
         for item in items {
             let category = item.article?.category ?? "Autre"
@@ -36,12 +35,19 @@ struct ShoppingListView: View {
     
     var body: some View {
         Group {
-            if let _ = currentList {
+            if currentList != nil {
                 List {
                     ForEach(sortedCategories, id: \.self) { category in
                         Section(header: Text(category)) {
                             ForEach(groupedItems[category] ?? []) { item in
                                 ShoppingListItemRow(item: item)
+                                    .swipeActions(edge: .trailing) {
+                                        Button(role: .destructive) {
+                                            removeItem(item)
+                                        } label: {
+                                            Label("Supprimer", systemImage: "trash")
+                                        }
+                                    }
                             }
                         }
                     }
@@ -71,7 +77,14 @@ struct ShoppingListView: View {
         }
         .sheet(isPresented: $showingAddItem) {
             if let list = currentList {
-                AddShoppingItemView(shoppingList: list)
+                // Passage direct à ArticleSelectionView
+                ArticleSelectionView(
+                    forRecipe: false,
+                    onArticleSelected: { article, quantity, _ in
+                        addItemToShoppingList(article: article, quantity: quantity, list: list)
+                        showingAddItem = false
+                    }
+                )
             }
         }
         .onAppear {
@@ -81,37 +94,53 @@ struct ShoppingListView: View {
         }
     }
     
+    // Créer une nouvelle liste de courses
     private func createNewShoppingList() {
         let newList = ShoppingList()
         modelContext.insert(newList)
     }
-}
-
-struct ShoppingListItemRow: View {
-    @Bindable var item: ShoppingListItem
     
-    var body: some View {
-        HStack {
-            Button {
-                item.isChecked.toggle()
-            } label: {
-                Image(systemName: item.isChecked ? "checkmark.square" : "square")
-                    .foregroundColor(item.isChecked ? .green : .primary)
+    // Ajouter un article à la liste de courses
+    private func addItemToShoppingList(article: Article, quantity: Double, list: ShoppingList) {
+        // Vérifier si l'article existe déjà dans la liste
+        if let existingItems = list.items,
+           let existingItem = existingItems.first(where: { $0.article?.id == article.id }) {
+            // Si oui, augmenter la quantité
+            existingItem.quantity += quantity
+            // S'assurer qu'il est marqué comme manuel
+            existingItem.isManuallyAdded = true
+        } else {
+            // Sinon, créer un nouvel élément
+            let newItem = ShoppingListItem(
+                shoppingList: list,
+                article: article,
+                quantity: quantity,
+                isManuallyAdded: true  // Marquer comme manuel
+            )
+            modelContext.insert(newItem)
+            if list.items == nil {
+                list.items = [newItem]
+            } else {
+                list.items?.append(newItem)
             }
-            .buttonStyle(BorderlessButtonStyle())
-            
-            VStack(alignment: .leading) {
-                Text(item.article?.name ?? "Article inconnu")
-                    .strikethrough(item.isChecked)
-                    .foregroundColor(item.isChecked ? .secondary : .primary)
-            }
-            
-            Spacer()
-            
-            Text("\(String(format: "%.1f", item.quantity)) \(item.article?.unit ?? "")")
-                .foregroundColor(.secondary)
         }
-        .padding(.vertical, 4)
+        
+        // Mettre à jour la date de modification
+        list.modificationDate = Date()
+    }
+    
+    // Supprimer un article de la liste
+    private func removeItem(_ item: ShoppingListItem) {
+        guard let list = currentList else { return }
+        
+        // Retirer l'élément de la liste
+        list.items?.removeAll(where: { $0.id == item.id })
+        
+        // Supprimer l'élément du contexte
+        modelContext.delete(item)
+        
+        // Mettre à jour la date de modification
+        list.modificationDate = Date()
     }
 }
 
@@ -122,7 +151,6 @@ struct ShoppingListItemRow: View {
         ShoppingList.self, ShoppingListItem.self,
         configurations: config
     )
-    
     let context = container.mainContext
     
     // Créer des exemples de données

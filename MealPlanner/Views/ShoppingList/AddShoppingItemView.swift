@@ -1,4 +1,4 @@
-import SwiftUI
+/*import SwiftUI
 import SwiftData
 
 struct AddShoppingItemView: View {
@@ -174,3 +174,4 @@ struct AddShoppingItemView: View {
     return AddShoppingItemView(shoppingList: shoppingList)
         .modelContainer(container)
 }
+*/
