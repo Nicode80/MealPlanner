@@ -71,13 +71,7 @@ struct AddNewArticleView: View {
                     }
                 }
                 
-                if forRecipe {
-                    Section(header: Text("Remarque")) {
-                        Text("Cet article sera utilisé dans les recettes. Il sera automatiquement marqué comme alimentaire.")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                }
+                // Suppression de la remarque sur l'article alimentaire en contexte recette
             }
             .navigationTitle(forRecipe ? "Nouvel ingrédient" : "Nouvel article")
             .toolbar {

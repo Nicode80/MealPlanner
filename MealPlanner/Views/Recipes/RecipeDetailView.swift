@@ -104,9 +104,10 @@ struct RecipeDetailView: View {
             }
         }
         .sheet(isPresented: $showingAddIngredient) {
-            // Utilisation de ArticleSelectionView à la place de IngredientSelectionView
+            // Utilisation de ArticleSelectionView avec le nom de la recette
             ArticleSelectionView(
                 forRecipe: true,
+                recipeName: recipe.name,
                 onArticleSelected: { article, quantity, isOptional in
                     // Utiliser le modelContext pour ajouter l'ingrédient à la recette
                     let recipeIngredient = RecipeIngredient(
@@ -139,41 +140,43 @@ struct RecipeDetailView: View {
     }
 }
 
-#Preview {
-    let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(
-        for: Recipe.self, Article.self, RecipeIngredient.self,
-        configurations: config
-    )
-    
-    let context = container.mainContext
-    
-    // Créer un exemple de recette
-    let recipe = Recipe(name: "Pâtes à la carbonara", details: "Un classique italien facile et délicieux.")
-    
-    let spaghetti = Article(name: "Spaghetti", category: "Épicerie salée", unit: "g", isFood: true)
-    let bacon = Article(name: "Lardons", category: "Viandes", unit: "g", isFood: true)
-    let egg = Article(name: "Œuf", category: "Produits laitiers", unit: "pièce(s)", isFood: true)
-    let cheese = Article(name: "Parmesan", category: "Produits laitiers", unit: "g", isFood: true)
-    
-    context.insert(recipe)
-    context.insert(spaghetti)
-    context.insert(bacon)
-    context.insert(egg)
-    context.insert(cheese)
-    
-    let ingredient1 = RecipeIngredient(recipe: recipe, article: spaghetti, quantity: 100, isOptional: false)
-    let ingredient2 = RecipeIngredient(recipe: recipe, article: bacon, quantity: 50, isOptional: false)
-    let ingredient3 = RecipeIngredient(recipe: recipe, article: egg, quantity: 1, isOptional: false)
-    let ingredient4 = RecipeIngredient(recipe: recipe, article: cheese, quantity: 20, isOptional: false)
-    
-    context.insert(ingredient1)
-    context.insert(ingredient2)
-    context.insert(ingredient3)
-    context.insert(ingredient4)
-    
-    return NavigationStack {
-        RecipeDetailView(recipe: recipe)
+struct RecipeDetailView_Previews: PreviewProvider {
+    static var previews: some View {
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try! ModelContainer(
+            for: Recipe.self, Article.self, RecipeIngredient.self,
+            configurations: config
+        )
+        
+        let context = container.mainContext
+        
+        // Créer un exemple de recette
+        let recipe = Recipe(name: "Pâtes à la carbonara", details: "Un classique italien facile et délicieux.")
+        
+        let spaghetti = Article(name: "Spaghetti", category: "Épicerie salée", unit: "g", isFood: true)
+        let bacon = Article(name: "Lardons", category: "Viandes", unit: "g", isFood: true)
+        let egg = Article(name: "Œuf", category: "Produits laitiers", unit: "pièce(s)", isFood: true)
+        let cheese = Article(name: "Parmesan", category: "Produits laitiers", unit: "g", isFood: true)
+        
+        context.insert(recipe)
+        context.insert(spaghetti)
+        context.insert(bacon)
+        context.insert(egg)
+        context.insert(cheese)
+        
+        let ingredient1 = RecipeIngredient(recipe: recipe, article: spaghetti, quantity: 100, isOptional: false)
+        let ingredient2 = RecipeIngredient(recipe: recipe, article: bacon, quantity: 50, isOptional: false)
+        let ingredient3 = RecipeIngredient(recipe: recipe, article: egg, quantity: 1, isOptional: false)
+        let ingredient4 = RecipeIngredient(recipe: recipe, article: cheese, quantity: 20, isOptional: false)
+        
+        context.insert(ingredient1)
+        context.insert(ingredient2)
+        context.insert(ingredient3)
+        context.insert(ingredient4)
+        
+        return NavigationStack {
+            RecipeDetailView(recipe: recipe)
+        }
+        .modelContainer(container)
     }
-    .modelContainer(container)
 }

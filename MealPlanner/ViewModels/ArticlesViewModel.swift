@@ -26,7 +26,7 @@ class ArticlesViewModel {
     let foodCategories = [
         "Fruits et légumes", "Viandes", "Poissons et fruits de mer",
         "Produits laitiers", "Boulangerie", "Épicerie sucrée",
-        "Épicerie salée", "Boissons", "Surgelés"
+        "Épicerie salée", "Boissons", "Surgelés", "Épices et herbes"
     ]
     
     // Catégories non-alimentaires

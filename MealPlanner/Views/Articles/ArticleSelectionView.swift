@@ -13,10 +13,12 @@ struct ArticleSelectionView: View {
     @State private var forRecipeContext: Bool = true // Par défaut, on est dans le contexte d'une recette
     
     var onArticleSelected: (Article, Double, Bool) -> Void
+    var recipeName: String? // Paramètre optionnel pour le nom de la recette
     
-    init(forRecipe: Bool = true, onArticleSelected: @escaping (Article, Double, Bool) -> Void) {
+    init(forRecipe: Bool = true, recipeName: String? = nil, onArticleSelected: @escaping (Article, Double, Bool) -> Void) {
         self.onArticleSelected = onArticleSelected
         self._forRecipeContext = State(initialValue: forRecipe)
+        self.recipeName = recipeName
     }
     
     var body: some View {
@@ -64,7 +66,10 @@ struct ArticleSelectionView: View {
                     }
                     .padding(.vertical, 8)
                     
-                    // Résultats de recherche et sélection
+                    // Liste des résultats
+                    // Reste du corps de la vue...
+                    
+                    // CODE EXISTANT POUR LA LISTE ET LE RESTE DE LA VUE
                     List {
                         // Option pour créer un nouvel article
                         Section {
@@ -221,14 +226,19 @@ struct ArticleSelectionView: View {
                     ProgressView()
                 }
             }
-            .navigationTitle(forRecipeContext ? "Ajouter un ingrédient" : "Ajouter un article")
+            // Utilisation d'un titre personnalisé avec un ViewBuilder pour permettre un titre sur deux lignes
             .toolbar {
+                ToolbarItem(placement: .principal) {
+                    customNavigationTitle
+                }
+                
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Annuler") {
                         dismiss()
                     }
                 }
             }
+            .navigationBarTitleDisplayMode(.inline)
             .sheet(isPresented: $showingAddNewArticle) {
                 if let vm = viewModel {
                     AddNewArticleView(
@@ -250,5 +260,26 @@ struct ArticleSelectionView: View {
                 }
             }
         }
+    }
+    
+    // Titre de navigation personnalisé qui s'adapte à plusieurs lignes
+    private var customNavigationTitle: some View {
+        VStack {
+            if forRecipeContext, let name = recipeName {
+                Text("Ajouter un ingrédient")
+                    .font(.headline)
+                    .lineLimit(1)
+                Text("à \(name)")
+                    .font(.subheadline)
+                    .lineLimit(1)
+            } else if forRecipeContext {
+                Text("Ajouter un ingrédient")
+                    .font(.headline)
+            } else {
+                Text("Ajouter un article")
+                    .font(.headline)
+            }
+        }
+        .multilineTextAlignment(.center)
     }
 }
