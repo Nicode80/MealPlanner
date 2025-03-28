@@ -56,13 +56,13 @@ struct RecipeDetailView: View {
                     
                     if let ingredients = recipe.ingredients, !ingredients.isEmpty {
                         ForEach(ingredients) { recipeIngredient in
-                            if let ingredient = recipeIngredient.ingredient {
+                            if let article = recipeIngredient.article {
                                 HStack {
-                                    Text("\(ingredient.name)")
+                                    Text("\(article.name)")
                                     
                                     Spacer()
                                     
-                                    Text("\(String(format: "%.1f", recipeIngredient.quantity)) \(ingredient.unit)")
+                                    Text("\(String(format: "%.1f", recipeIngredient.quantity)) \(article.unit)")
                                         .foregroundColor(.secondary)
                                     
                                     if recipeIngredient.isOptional {
@@ -104,24 +104,27 @@ struct RecipeDetailView: View {
             }
         }
         .sheet(isPresented: $showingAddIngredient) {
-            // Remplacé AddRecipeIngredientView par IngredientSelectionView
-            IngredientSelectionView(onIngredientSelected: { ingredient, quantity, isOptional in
-                // Utiliser le modelContext pour ajouter l'ingrédient à la recette
-                let recipeIngredient = RecipeIngredient(
-                    recipe: recipe,
-                    ingredient: ingredient,
-                    quantity: quantity,
-                    isOptional: isOptional
-                )
-                
-                modelContext.insert(recipeIngredient)
-                
-                if recipe.ingredients == nil {
-                    recipe.ingredients = [recipeIngredient]
-                } else {
-                    recipe.ingredients?.append(recipeIngredient)
+            // Utilisation de ArticleSelectionView à la place de IngredientSelectionView
+            ArticleSelectionView(
+                forRecipe: true,
+                onArticleSelected: { article, quantity, isOptional in
+                    // Utiliser le modelContext pour ajouter l'ingrédient à la recette
+                    let recipeIngredient = RecipeIngredient(
+                        recipe: recipe,
+                        article: article,
+                        quantity: quantity,
+                        isOptional: isOptional
+                    )
+                    
+                    modelContext.insert(recipeIngredient)
+                    
+                    if recipe.ingredients == nil {
+                        recipe.ingredients = [recipeIngredient]
+                    } else {
+                        recipe.ingredients?.append(recipeIngredient)
+                    }
                 }
-            })
+            )
         }
         .sheet(isPresented: $showingEditRecipe) {
             EditRecipeView(recipe: recipe)
@@ -139,7 +142,7 @@ struct RecipeDetailView: View {
 #Preview {
     let config = ModelConfiguration(isStoredInMemoryOnly: true)
     let container = try! ModelContainer(
-        for: Recipe.self, Ingredient.self, RecipeIngredient.self,
+        for: Recipe.self, Article.self, RecipeIngredient.self,
         configurations: config
     )
     
@@ -148,21 +151,21 @@ struct RecipeDetailView: View {
     // Créer un exemple de recette
     let recipe = Recipe(name: "Pâtes à la carbonara", details: "Un classique italien facile et délicieux.")
     
-    let spaghettiIngredient = Ingredient(name: "Spaghetti", category: "Pâtes", unit: "g")
-    let baconIngredient = Ingredient(name: "Lardons", category: "Viandes", unit: "g")
-    let eggIngredient = Ingredient(name: "Œuf", category: "Produits laitiers", unit: "pièce(s)")
-    let cheeseIngredient = Ingredient(name: "Parmesan", category: "Produits laitiers", unit: "g")
+    let spaghetti = Article(name: "Spaghetti", category: "Épicerie salée", unit: "g", isFood: true)
+    let bacon = Article(name: "Lardons", category: "Viandes", unit: "g", isFood: true)
+    let egg = Article(name: "Œuf", category: "Produits laitiers", unit: "pièce(s)", isFood: true)
+    let cheese = Article(name: "Parmesan", category: "Produits laitiers", unit: "g", isFood: true)
     
     context.insert(recipe)
-    context.insert(spaghettiIngredient)
-    context.insert(baconIngredient)
-    context.insert(eggIngredient)
-    context.insert(cheeseIngredient)
+    context.insert(spaghetti)
+    context.insert(bacon)
+    context.insert(egg)
+    context.insert(cheese)
     
-    let ingredient1 = RecipeIngredient(recipe: recipe, ingredient: spaghettiIngredient, quantity: 100, isOptional: false)
-    let ingredient2 = RecipeIngredient(recipe: recipe, ingredient: baconIngredient, quantity: 50, isOptional: false)
-    let ingredient3 = RecipeIngredient(recipe: recipe, ingredient: eggIngredient, quantity: 1, isOptional: false)
-    let ingredient4 = RecipeIngredient(recipe: recipe, ingredient: cheeseIngredient, quantity: 20, isOptional: false)
+    let ingredient1 = RecipeIngredient(recipe: recipe, article: spaghetti, quantity: 100, isOptional: false)
+    let ingredient2 = RecipeIngredient(recipe: recipe, article: bacon, quantity: 50, isOptional: false)
+    let ingredient3 = RecipeIngredient(recipe: recipe, article: egg, quantity: 1, isOptional: false)
+    let ingredient4 = RecipeIngredient(recipe: recipe, article: cheese, quantity: 20, isOptional: false)
     
     context.insert(ingredient1)
     context.insert(ingredient2)

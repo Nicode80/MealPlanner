@@ -1,21 +1,21 @@
 import SwiftUI
 import SwiftData
 
-struct IngredientSelectionView: View {
+struct ArticleSelectionView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     
-    @State private var viewModel: IngredientsViewModel?
+    @State private var viewModel: ArticlesViewModel?
     @State private var quantity: Double = 1.0
     @State private var isOptional: Bool = false
-    @State private var showingAddNewIngredient = false
+    @State private var showingAddNewArticle = false
     @State private var selectedCategoryFilter: String?
     @State private var forRecipeContext: Bool = true // Par défaut, on est dans le contexte d'une recette
     
-    var onIngredientSelected: (Ingredient, Double, Bool) -> Void
+    var onArticleSelected: (Article, Double, Bool) -> Void
     
-    init(forRecipe: Bool = true, onIngredientSelected: @escaping (Ingredient, Double, Bool) -> Void) {
-        self.onIngredientSelected = onIngredientSelected
+    init(forRecipe: Bool = true, onArticleSelected: @escaping (Article, Double, Bool) -> Void) {
+        self.onArticleSelected = onArticleSelected
         self._forRecipeContext = State(initialValue: forRecipe)
     }
     
@@ -24,9 +24,9 @@ struct IngredientSelectionView: View {
             VStack {
                 if let vm = viewModel {
                     // Barre de recherche
-                    TextField("Rechercher un ingrédient", text: Binding(
+                    TextField("Rechercher un article", text: Binding(
                         get: { vm.searchText },
-                        set: { vm.searchIngredient(query: $0, forRecipe: forRecipeContext) }
+                        set: { vm.searchArticle(query: $0, forRecipe: forRecipeContext) }
                     ))
                     .padding(8)
                     .background(Color(.systemGray6))
@@ -66,37 +66,37 @@ struct IngredientSelectionView: View {
                     
                     // Résultats de recherche et sélection
                     List {
-                        // Option pour créer un nouvel ingrédient
+                        // Option pour créer un nouvel article
                         Section {
                             Button {
                                 vm.searchText = ""
-                                showingAddNewIngredient = true
+                                showingAddNewArticle = true
                             } label: {
-                                Label("Créer un nouvel ingrédient", systemImage: "plus.circle")
+                                Label(forRecipeContext ? "Créer un nouvel ingrédient" : "Créer un nouvel article", systemImage: "plus.circle")
                             }
                         }
                         
-                        // Afficher les ingrédients par catégorie
-                        let filteredCategories = vm.ingredientsByCategory.filter {
+                        // Afficher les articles par catégorie
+                        let filteredCategories = vm.articlesByCategory.filter {
                             selectedCategoryFilter == nil || $0.key == selectedCategoryFilter
                         }
                         
                         ForEach(filteredCategories.keys.sorted(), id: \.self) { category in
                             Section(header: Text(category)) {
-                                ForEach(filteredCategories[category] ?? []) { ingredient in
+                                ForEach(filteredCategories[category] ?? []) { article in
                                     Button {
-                                        vm.selectedIngredient = ingredient
+                                        vm.selectedArticle = article
                                     } label: {
                                         HStack {
-                                            Text(ingredient.name)
+                                            Text(article.name)
                                             
                                             Spacer()
                                             
-                                            Text(ingredient.unit)
+                                            Text(article.unit)
                                                 .foregroundColor(.secondary)
                                                 .font(.caption)
                                             
-                                            if vm.selectedIngredient?.id == ingredient.id {
+                                            if vm.selectedArticle?.id == article.id {
                                                 Image(systemName: "checkmark")
                                                     .foregroundColor(.blue)
                                             }
@@ -107,23 +107,23 @@ struct IngredientSelectionView: View {
                             }
                         }
                         
-                        // Suggestions d'ingrédients similaires
-                        if !vm.similarIngredientSuggestions.isEmpty {
+                        // Suggestions d'articles similaires
+                        if !vm.similarArticleSuggestions.isEmpty {
                             Section(header: Text("Suggestions similaires")) {
-                                ForEach(vm.similarIngredientSuggestions) { ingredient in
+                                ForEach(vm.similarArticleSuggestions) { article in
                                     Button {
-                                        vm.selectedIngredient = ingredient
+                                        vm.selectedArticle = article
                                     } label: {
                                         HStack {
-                                            Text(ingredient.name)
+                                            Text(article.name)
                                             
                                             Spacer()
                                             
-                                            Text(ingredient.unit)
+                                            Text(article.unit)
                                                 .foregroundColor(.secondary)
                                                 .font(.caption)
                                             
-                                            if vm.selectedIngredient?.id == ingredient.id {
+                                            if vm.selectedArticle?.id == article.id {
                                                 Image(systemName: "checkmark")
                                                     .foregroundColor(.blue)
                                             }
@@ -135,19 +135,25 @@ struct IngredientSelectionView: View {
                         }
                     }
                     
-                    // Options pour l'ingrédient sélectionné
-                    if let selectedIngredient = vm.selectedIngredient {
+                    // Options pour l'article sélectionné
+                    if let selectedArticle = vm.selectedArticle {
                         VStack(spacing: 16) {
                             Divider()
                             
-                            Text("Quantité pour 1 personne")
-                                .font(.headline)
-                                .frame(maxWidth: .infinity, alignment: .center)
+                            if forRecipeContext {
+                                Text("Quantité pour 1 personne")
+                                    .font(.headline)
+                                    .frame(maxWidth: .infinity, alignment: .center)
+                            } else {
+                                Text("Quantité")
+                                    .font(.headline)
+                                    .frame(maxWidth: .infinity, alignment: .center)
+                            }
                             
                             // Sélecteur de quantité avec boutons + et -
                             HStack {
                                 Button(action: {
-                                    let step = vm.getStepValue(for: selectedIngredient.unit)
+                                    let step = vm.getStepValue(for: selectedArticle.unit)
                                     quantity = max(step, quantity - step)
                                 }) {
                                     Image(systemName: "minus.circle.fill")
@@ -157,7 +163,7 @@ struct IngredientSelectionView: View {
                                 
                                 Spacer()
                                 
-                                if vm.isDecimalUnit(selectedIngredient.unit) {
+                                if vm.isDecimalUnit(selectedArticle.unit) {
                                     // Pour kg/l, afficher avec une décimale
                                     TextField("Quantité", value: $quantity, format: .number.precision(.fractionLength(1)))
                                         .keyboardType(.decimalPad)
@@ -174,7 +180,7 @@ struct IngredientSelectionView: View {
                                 Spacer()
                                 
                                 Button(action: {
-                                    let step = vm.getStepValue(for: selectedIngredient.unit)
+                                    let step = vm.getStepValue(for: selectedArticle.unit)
                                     quantity += step
                                 }) {
                                     Image(systemName: "plus.circle.fill")
@@ -185,18 +191,20 @@ struct IngredientSelectionView: View {
                             .padding(.horizontal)
                             
                             // Unité de mesure
-                            Text(selectedIngredient.unit)
+                            Text(selectedArticle.unit)
                                 .foregroundColor(.secondary)
                                 .frame(maxWidth: .infinity, alignment: .center)
                             
-                            Toggle("Ingrédient optionnel", isOn: $isOptional)
-                                .padding(.horizontal)
+                            if forRecipeContext {
+                                Toggle("Ingrédient optionnel", isOn: $isOptional)
+                                    .padding(.horizontal)
+                            }
                             
                             Button {
-                                onIngredientSelected(selectedIngredient, quantity, isOptional)
+                                onArticleSelected(selectedArticle, quantity, isOptional)
                                 dismiss()
                             } label: {
-                                Text("Ajouter à la recette")
+                                Text(forRecipeContext ? "Ajouter à la recette" : "Ajouter à la liste")
                                     .frame(maxWidth: .infinity)
                                     .padding()
                                     .background(Color.blue)
@@ -213,7 +221,7 @@ struct IngredientSelectionView: View {
                     ProgressView()
                 }
             }
-            .navigationTitle("Ajouter un ingrédient")
+            .navigationTitle(forRecipeContext ? "Ajouter un ingrédient" : "Ajouter un article")
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Annuler") {
@@ -221,24 +229,24 @@ struct IngredientSelectionView: View {
                     }
                 }
             }
-            .sheet(isPresented: $showingAddNewIngredient) {
+            .sheet(isPresented: $showingAddNewArticle) {
                 if let vm = viewModel {
-                    AddNewIngredientView(
+                    AddNewArticleView(
                         viewModel: vm,
                         forRecipe: forRecipeContext,
-                        onIngredientCreated: { ingredient in
-                            vm.selectedIngredient = ingredient
-                            vm.fetchIngredients()
+                        onArticleCreated: { article in
+                            vm.selectedArticle = article
+                            vm.fetchArticles()
                         }
                     )
                 }
             }
             .onAppear {
-                print("IngredientSelectionView appeared")
+                print("ArticleSelectionView appeared")
                 if viewModel == nil {
-                    viewModel = IngredientsViewModel(modelContext: modelContext)
+                    viewModel = ArticlesViewModel(modelContext: modelContext)
                     // Initialiser la recherche avec les bons filtres
-                    viewModel?.searchIngredient(query: "", forRecipe: forRecipeContext)
+                    viewModel?.searchArticle(query: "", forRecipe: forRecipeContext)
                 }
             }
         }

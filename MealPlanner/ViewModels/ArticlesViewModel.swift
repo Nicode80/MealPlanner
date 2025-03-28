@@ -4,56 +4,62 @@ import SwiftUI
 import Observation
 
 @Observable
-class IngredientsViewModel {
+class ArticlesViewModel {
     private var modelContext: ModelContext
     
-    // Liste des ingrédients existants
-    var ingredients: [Ingredient] = []
-    var selectedIngredient: Ingredient?
+    // Liste des articles existants
+    var articles: [Article] = []
+    var selectedArticle: Article?
     
-    // Champs pour la création d'un nouvel ingrédient
-    var newIngredientName: String = ""
-    var newIngredientCategory: String = "Fruits et légumes"
-    var newIngredientUnit: String = "pièce(s)"
+    // Champs pour la création d'un nouvel article
+    var newArticleName: String = ""
+    var newArticleCategory: String = "Fruits et légumes"
+    var newArticleUnit: String = "pièce(s)"
+    var newArticleIsFood: Bool = true
     
     // Recherche et filtrage
     var searchText: String = ""
-    var searchResults: [Ingredient] = []
-    var similarIngredientSuggestions: [Ingredient] = []
+    var searchResults: [Article] = []
+    var similarArticleSuggestions: [Article] = []
     
-    // Catégories pour les ingrédients alimentaires (sans Hygiène pour les recettes)
+    // Catégories alimentaires
     let foodCategories = [
         "Fruits et légumes", "Viandes", "Poissons et fruits de mer",
         "Produits laitiers", "Boulangerie", "Épicerie sucrée",
         "Épicerie salée", "Boissons", "Surgelés"
     ]
     
-    // Toutes les catégories (incluant Hygiène pour la liste de courses)
-    let allCategories = [
-        "Fruits et légumes", "Viandes", "Poissons et fruits de mer",
-        "Produits laitiers", "Boulangerie", "Épicerie sucrée",
-        "Épicerie salée", "Boissons", "Surgelés", "Hygiène"
+    // Catégories non-alimentaires
+    let nonFoodCategories = [
+        "Hygiène et beauté", "Produits d'entretien", "Maison et déco",
+        "Vêtements", "Ustensiles et cuisine", "Papeterie",
+        "Électronique", "Jardinage", "Animalerie"
     ]
     
+    // Toutes les catégories
+    var allCategories: [String] {
+        return foodCategories + nonFoodCategories
+    }
+    
     // Unités prédéfinies
-    let units = ["g", "kg", "ml", "l", "pièce(s)", "tranche(s)", "cuillère(s) à café", "cuillère(s) à soupe"]
+    let units = ["g", "kg", "ml", "l", "pièce(s)", "tranche(s)", "cuillère(s) à café", "cuillère(s) à soupe", "boîte(s)", "paquet(s)"]
     
     // Unités qui doivent utiliser des valeurs décimales (pas de 0.1)
     let decimalUnits = ["kg", "l"]
     
     init(modelContext: ModelContext) {
         self.modelContext = modelContext
-        fetchIngredients()
+        fetchArticles()
     }
     
-    func fetchIngredients() {
-        let descriptor = FetchDescriptor<Ingredient>(sortBy: [SortDescriptor(\.name)])
+    func fetchArticles() {
+        let descriptor = FetchDescriptor<Article>(sortBy: [SortDescriptor(\.name)])
         do {
-            ingredients = try modelContext.fetch(descriptor)
-            // Initialiser les résultats de recherche avec tous les ingrédients
-            searchResults = ingredients
+            articles = try modelContext.fetch(descriptor)
+            // Initialiser les résultats de recherche avec tous les articles
+            searchResults = articles
         } catch {
-            print("Erreur lors de la récupération des ingrédients: \(error)")
+            print("Erreur lors de la récupération des articles: \(error)")
         }
     }
     
@@ -72,137 +78,141 @@ class IngredientsViewModel {
         return isDecimalUnit(unit) ? 0.1 : 1.0
     }
     
-    // Obtenir les ingrédients alimentaires (exclure la catégorie Hygiène)
-    func getFoodIngredients() -> [Ingredient] {
-        return ingredients.filter { !$0.category.contains("Hygiène") }
+    // Obtenir les articles alimentaires uniquement
+    func getFoodArticles() -> [Article] {
+        return articles.filter { $0.isFood }
     }
     
-    // Recherche d'ingrédients avec gestion des similitudes
-    func searchIngredient(query: String, forRecipe: Bool = true) {
+    // Recherche d'articles avec gestion des similitudes
+    func searchArticle(query: String, forRecipe: Bool = true) {
         searchText = query
         
-        // Base d'ingrédients à filtrer (tous ou seulement alimentaires)
-        let baseIngredients = forRecipe ? getFoodIngredients() : ingredients
+        // Base d'articles à filtrer (tous ou seulement alimentaires)
+        let baseArticles = forRecipe ? getFoodArticles() : articles
         
         guard !query.isEmpty else {
-            searchResults = baseIngredients
-            similarIngredientSuggestions = []
+            searchResults = baseArticles
+            similarArticleSuggestions = []
             return
         }
         
         let normalizedQuery = normalizeString(query)
         
         // Recherche exacte d'abord (insensible à la casse)
-        searchResults = baseIngredients.filter {
+        searchResults = baseArticles.filter {
             normalizeString($0.name).contains(normalizedQuery)
         }
         
         // Si pas de résultat exact, chercher des similitudes
         if searchResults.isEmpty {
-            findSimilarIngredients(to: query, in: baseIngredients)
+            findSimilarArticles(to: query, in: baseArticles)
         } else {
-            similarIngredientSuggestions = []
+            similarArticleSuggestions = []
         }
     }
     
     // Vérification de l'existence d'un nom similaire
-    func checkForSimilarIngredient(name: String) -> Ingredient? {
+    func checkForSimilarArticle(name: String, forRecipe: Bool = true) -> Article? {
         guard !name.isEmpty else { return nil }
+        
+        // Base d'articles pour la recherche
+        let baseArticles = forRecipe ? getFoodArticles() : articles
         
         let normalizedName = normalizeString(name)
         
         // Vérifier d'abord les correspondances exactes ou très proches
-        if let exactMatch = ingredients.first(where: {
-            let ingredientName = normalizeString($0.name)
-            return ingredientName == normalizedName ||
-                   ingredientName.replacingOccurrences(of: "s", with: "") == normalizedName.replacingOccurrences(of: "s", with: "") // Gère singulier/pluriel
+        if let exactMatch = baseArticles.first(where: {
+            let articleName = normalizeString($0.name)
+            return articleName == normalizedName ||
+                   articleName.replacingOccurrences(of: "s", with: "") == normalizedName.replacingOccurrences(of: "s", with: "") // Gère singulier/pluriel
         }) {
             return exactMatch
         }
         
         // Vérifier les noms similaires avec une distance plus stricte
-        let similarIngredients = ingredients.filter { ingredient in
-            let distance = levenshteinDistance(normalizedName, normalizeString(ingredient.name))
+        let similarArticles = baseArticles.filter { article in
+            let distance = levenshteinDistance(normalizedName, normalizeString(article.name))
             return distance <= 1 && distance > 0 // Plus strict : seulement 1 caractère de différence
         }
         
         // Si aucun résultat avec distance 1, essayer avec une distance de 2
-        if similarIngredients.isEmpty {
-            let lessSimilarIngredients = ingredients.filter { ingredient in
-                let distance = levenshteinDistance(normalizedName, normalizeString(ingredient.name))
+        if similarArticles.isEmpty {
+            let lessSimilarArticles = baseArticles.filter { article in
+                let distance = levenshteinDistance(normalizedName, normalizeString(article.name))
                 // Pour les noms plus longs, une distance de 2 peut être pertinente
                 return distance <= 2 && distance > 1 && normalizedName.count > 4
             }
-            return lessSimilarIngredients.first
+            return lessSimilarArticles.first
         }
         
-        return similarIngredients.first
+        return similarArticles.first
     }
     
-    // Trouve des ingrédients similaires à une chaîne donnée
-    private func findSimilarIngredients(to query: String, in baseIngredients: [Ingredient]) {
+    // Trouve des articles similaires à une chaîne donnée
+    private func findSimilarArticles(to query: String, in baseArticles: [Article]) {
         let normalizedQuery = normalizeString(query)
         
-        // Filtre les ingrédients dont la distance de Levenshtein est faible
-        similarIngredientSuggestions = baseIngredients.filter { ingredient in
-            let normalizedName = normalizeString(ingredient.name)
+        // Filtre les articles dont la distance de Levenshtein est faible
+        similarArticleSuggestions = baseArticles.filter { article in
+            let normalizedName = normalizeString(article.name)
             return levenshteinDistance(normalizedQuery, normalizedName) <= 2 // Tolérance de 2 caractères
         }
     }
     
-    // Ajoute un nouvel ingrédient
-    func addIngredient(name: String, category: String, unit: String) -> Ingredient? {
+    // Ajoute un nouvel article
+    func addArticle(name: String, category: String, unit: String, isFood: Bool = true) -> Article? {
         guard !name.isEmpty && !category.isEmpty && !unit.isEmpty else {
             return nil
         }
         
-        // Vérifier doublon avant création - utilise la même logique que checkForSimilarIngredient
-        if let existingIngredient = checkForSimilarIngredient(name: name) {
-            return existingIngredient
+        // Vérifier doublon avant création
+        if let existingArticle = checkForSimilarArticle(name: name, forRecipe: isFood) {
+            return existingArticle
         }
         
-        // Si l'ingrédient n'existe pas, le créer
-        let newIngredient = Ingredient(name: name, category: category, unit: unit)
-        modelContext.insert(newIngredient)
+        // Si l'article n'existe pas, le créer
+        let newArticle = Article(name: name, category: category, unit: unit, isFood: isFood)
+        modelContext.insert(newArticle)
         try? modelContext.save()
-        fetchIngredients()
+        fetchArticles()
         
         // Réinitialiser les champs
-        resetNewIngredientFields()
+        resetNewArticleFields()
         
-        return newIngredient
+        return newArticle
     }
     
-    func resetNewIngredientFields() {
-        newIngredientName = ""
-        newIngredientCategory = "Fruits et légumes"
-        newIngredientUnit = "pièce(s)"
+    func resetNewArticleFields() {
+        newArticleName = ""
+        newArticleCategory = "Fruits et légumes"
+        newArticleUnit = "pièce(s)"
+        newArticleIsFood = true
     }
     
-    // Fusionne deux ingrédients (conserve le premier et supprime le second)
-    func mergeIngredients(keep: Ingredient, remove: Ingredient) {
-        // Transférer toutes les recettes de l'ingrédient à supprimer vers celui à conserver
+    // Fusionne deux articles (conserve le premier et supprime le second)
+    func mergeArticles(keep: Article, remove: Article) {
+        // Transférer toutes les recettes de l'article à supprimer vers celui à conserver
         if let recipeIngredients = remove.recipeIngredients {
             for recipeIngredient in recipeIngredients {
-                recipeIngredient.ingredient = keep
+                recipeIngredient.article = keep
             }
         }
         
         // Transférer tous les éléments de liste de courses
         if let shoppingItems = remove.shoppingListItems {
             for item in shoppingItems {
-                item.ingredient = keep
+                item.article = keep
             }
         }
         
-        // Supprimer l'ingrédient en double
+        // Supprimer l'article en double
         modelContext.delete(remove)
         try? modelContext.save()
-        fetchIngredients()
+        fetchArticles()
     }
     
-    // Récupérer les ingrédients groupés par catégorie
-    var ingredientsByCategory: [String: [Ingredient]] {
+    // Récupérer les articles groupés par catégorie
+    var articlesByCategory: [String: [Article]] {
         Dictionary(grouping: searchResults) { $0.category }
     }
     

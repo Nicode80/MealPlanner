@@ -1,47 +1,61 @@
 import SwiftUI
 import SwiftData
 
-struct AddNewIngredientView: View {
+struct AddNewArticleView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     
-    var viewModel: IngredientsViewModel
+    var viewModel: ArticlesViewModel
     var forRecipe: Bool = true
-    var onIngredientCreated: (Ingredient) -> Void
+    var onArticleCreated: (Article) -> Void
     
     @State private var name: String = ""
     @State private var category: String = "Fruits et légumes"
     @State private var unit: String = "pièce(s)"
-    @State private var showingSimilarIngredientAlert = false
-    @State private var similarIngredient: Ingredient?
+    @State private var isFood: Bool = true
+    @State private var showingSimilarArticleAlert = false
+    @State private var similarArticle: Article?
     @State private var nameEdited = false
     @State private var attemptedToAdd = false
     
     var body: some View {
         NavigationView {
             Form {
-                Section(header: Text("Informations de l'ingrédient")) {
+                Section(header: Text("Informations de l'article")) {
                     TextField("Nom", text: $name)
                         .onChange(of: name) { oldValue, newValue in
                             nameEdited = true
                             // Vérifier les similitudes dès que le nom change
                             // si l'utilisateur a tapé au moins 3 caractères
                             if newValue.count >= 3 {
-                                checkForSimilarIngredient()
+                                checkForSimilarArticle()
                             }
                         }
                         .onSubmit {
-                            checkForSimilarIngredient()
+                            checkForSimilarArticle()
                         }
                     
+                    // Type d'article (nourriture ou non)
+                    if !forRecipe {
+                        Toggle("Article alimentaire", isOn: $isFood)
+                            .onChange(of: isFood) { oldValue, newValue in
+                                // Ajuster la catégorie si nécessaire
+                                if newValue && !viewModel.foodCategories.contains(category) {
+                                    category = viewModel.foodCategories.first ?? "Fruits et légumes"
+                                } else if !newValue && !viewModel.nonFoodCategories.contains(category) {
+                                    category = viewModel.nonFoodCategories.first ?? "Hygiène et beauté"
+                                }
+                            }
+                    }
+                    
                     Picker("Catégorie", selection: $category) {
-                        ForEach(viewModel.getCategories(forRecipe: forRecipe), id: \.self) { category in
+                        ForEach(isFood ? viewModel.foodCategories : viewModel.nonFoodCategories, id: \.self) { category in
                             Text(category).tag(category)
                         }
                     }
                     .onChange(of: category) { _, _ in
                         if nameEdited && name.count >= 3 {
-                            checkForSimilarIngredient()
+                            checkForSimilarArticle()
                         }
                     }
                     
@@ -52,20 +66,20 @@ struct AddNewIngredientView: View {
                     }
                     .onChange(of: unit) { _, _ in
                         if nameEdited && name.count >= 3 {
-                            checkForSimilarIngredient()
+                            checkForSimilarArticle()
                         }
                     }
                 }
                 
                 if forRecipe {
                     Section(header: Text("Remarque")) {
-                        Text("Cet ingrédient sera utilisé dans les recettes. Assurez-vous qu'il s'agit bien d'un aliment.")
+                        Text("Cet article sera utilisé dans les recettes. Il sera automatiquement marqué comme alimentaire.")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
                 }
             }
-            .navigationTitle("Nouvel ingrédient")
+            .navigationTitle(forRecipe ? "Nouvel ingrédient" : "Nouvel article")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Annuler") {
@@ -76,13 +90,13 @@ struct AddNewIngredientView: View {
                     Button("Ajouter") {
                         attemptedToAdd = true
                         // Vérifier une dernière fois avant d'ajouter
-                        if let similar = viewModel.checkForSimilarIngredient(name: name) {
-                            similarIngredient = similar
-                            showingSimilarIngredientAlert = true
+                        if let similar = viewModel.checkForSimilarArticle(name: name, forRecipe: forRecipe) {
+                            similarArticle = similar
+                            showingSimilarArticleAlert = true
                         } else {
                             // Aucun doublon, on peut ajouter
-                            if let ingredient = addIngredient() {
-                                onIngredientCreated(ingredient)
+                            if let article = addArticle() {
+                                onArticleCreated(article)
                                 dismiss()
                             }
                         }
@@ -90,26 +104,26 @@ struct AddNewIngredientView: View {
                     .disabled(name.isEmpty || category.isEmpty || unit.isEmpty)
                 }
             }
-            .alert(isPresented: $showingSimilarIngredientAlert) {
+            .alert(isPresented: $showingSimilarArticleAlert) {
                 Alert(
-                    title: Text("Ingrédient similaire trouvé"),
-                    message: Text("Vouliez-vous dire \"\(similarIngredient?.name ?? "")\"?"),
+                    title: Text("Article similaire trouvé"),
+                    message: Text("Vouliez-vous dire \"\(similarArticle?.name ?? "")\"?"),
                     primaryButton: .default(Text("Oui, utiliser existant")) {
-                        if let ingredient = similarIngredient {
-                            // Utiliser l'ingrédient existant
-                            onIngredientCreated(ingredient)
+                        if let article = similarArticle {
+                            // Utiliser l'article existant
+                            onArticleCreated(article)
                             dismiss()
                         }
                     },
                     secondaryButton: .cancel(Text("Non, créer nouveau")) {
                         if attemptedToAdd {
                             // L'utilisateur a explicitement refusé la suggestion lors de l'ajout
-                            // On force la création d'un nouvel ingrédient
-                            let newIngredient = Ingredient(name: name, category: category, unit: unit)
-                            modelContext.insert(newIngredient)
+                            // On force la création d'un nouvel article
+                            let newArticle = Article(name: name, category: category, unit: unit, isFood: forRecipe || isFood)
+                            modelContext.insert(newArticle)
                             try? modelContext.save()
-                            viewModel.fetchIngredients()
-                            onIngredientCreated(newIngredient)
+                            viewModel.fetchArticles()
+                            onArticleCreated(newArticle)
                             dismiss()
                         }
                     }
@@ -118,15 +132,15 @@ struct AddNewIngredientView: View {
         }
     }
     
-    private func addIngredient() -> Ingredient? {
-        // Utilisez le ViewModel pour ajouter l'ingrédient
-        return viewModel.addIngredient(name: name, category: category, unit: unit)
+    private func addArticle() -> Article? {
+        // Utilisez le ViewModel pour ajouter l'article
+        return viewModel.addArticle(name: name, category: category, unit: unit, isFood: forRecipe || isFood)
     }
     
-    private func checkForSimilarIngredient() {
-        if let similar = viewModel.checkForSimilarIngredient(name: name) {
-            similarIngredient = similar
-            showingSimilarIngredientAlert = true
+    private func checkForSimilarArticle() {
+        if let similar = viewModel.checkForSimilarArticle(name: name, forRecipe: forRecipe) {
+            similarArticle = similar
+            showingSimilarArticleAlert = true
             nameEdited = false
         }
     }

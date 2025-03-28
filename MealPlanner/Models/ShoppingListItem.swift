@@ -11,11 +11,11 @@ final class ShoppingListItem {
     var shoppingList: ShoppingList?
     
     @Relationship(deleteRule: .nullify)
-    var ingredient: Ingredient?
+    var article: Article?
     
-    init(shoppingList: ShoppingList? = nil, ingredient: Ingredient? = nil, quantity: Double, isChecked: Bool = false) {
+    init(shoppingList: ShoppingList? = nil, article: Article? = nil, quantity: Double, isChecked: Bool = false) {
         self.shoppingList = shoppingList
-        self.ingredient = ingredient
+        self.article = article
         self.quantity = quantity
         self.isChecked = isChecked
     }

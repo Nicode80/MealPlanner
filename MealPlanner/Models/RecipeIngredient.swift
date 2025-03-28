@@ -12,11 +12,11 @@ final class RecipeIngredient {
     var recipe: Recipe?
     
     @Relationship(deleteRule: .nullify)
-    var ingredient: Ingredient?
+    var article: Article?
     
-    init(recipe: Recipe? = nil, ingredient: Ingredient? = nil, quantity: Double, isOptional: Bool = false) {
+    init(recipe: Recipe? = nil, article: Article? = nil, quantity: Double, isOptional: Bool = false) {
         self.recipe = recipe
-        self.ingredient = ingredient
+        self.article = article
         self.quantity = quantity
         self.isOptional = isOptional
     }
