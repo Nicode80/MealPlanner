@@ -4,7 +4,7 @@ import PhotosUI
 
 struct EditRecipeView: View {
     @Environment(\.dismiss) private var dismiss
-    @Bindable var recipe: Recipe  // Remplacé @ObservedObject par @Bindable
+    @Bindable var recipe: Recipe
     
     @State private var name: String
     @State private var details: String
@@ -87,19 +87,21 @@ struct EditRecipeView: View {
     }
 }
 
-#Preview {
-    let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(
-        for: Recipe.self, Ingredient.self, RecipeIngredient.self,
-        configurations: config
-    )
-    
-    let context = container.mainContext
-    
-    // Créer un exemple de recette
-    let recipe = Recipe(name: "Pâtes à la carbonara", details: "Un classique italien facile et délicieux.")
-    context.insert(recipe)
-    
-    return EditRecipeView(recipe: recipe)
-        .modelContainer(container)
+struct EditRecipeView_Previews: PreviewProvider {
+    static var previews: some View {
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try! ModelContainer(
+            for: Recipe.self, Article.self, RecipeIngredient.self,
+            configurations: config
+        )
+        
+        let context = container.mainContext
+        
+        // Créer un exemple de recette
+        let recipe = Recipe(name: "Pâtes à la carbonara", details: "Un classique italien facile et délicieux.")
+        context.insert(recipe)
+        
+        return EditRecipeView(recipe: recipe)
+            .modelContainer(container)
+    }
 }

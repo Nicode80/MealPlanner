@@ -34,7 +34,7 @@ struct ContentView: View {
     // Création d'un conteneur en mémoire pour la prévisualisation
     let config = ModelConfiguration(isStoredInMemoryOnly: true)
     let container = try! ModelContainer(
-        for: Recipe.self, Ingredient.self, RecipeIngredient.self,
+        for: Recipe.self, Article.self, RecipeIngredient.self,
         ShoppingList.self, ShoppingListItem.self,
         configurations: config
     )
@@ -50,26 +50,30 @@ struct ContentView: View {
 // Utilitaire pour générer des données d'exemple
 struct SampleData {
     static func createSampleData(in context: ModelContext) {
-        // Ingrédients d'exemple
-        let carotte = Ingredient(name: "Carotte", category: "Fruits et légumes", unit: "pièce(s)")
-        let tomate = Ingredient(name: "Tomate", category: "Fruits et légumes", unit: "pièce(s)")
-        let oignon = Ingredient(name: "Oignon", category: "Fruits et légumes", unit: "pièce(s)")
-        let riz = Ingredient(name: "Riz", category: "Épicerie salée", unit: "g")
-        let poulet = Ingredient(name: "Blanc de poulet", category: "Viandes", unit: "g")
+        // Articles alimentaires d'exemple
+        let carotte = Article(name: "Carotte", category: "Fruits et légumes", unit: "pièce(s)", isFood: true)
+        let tomate = Article(name: "Tomate", category: "Fruits et légumes", unit: "pièce(s)", isFood: true)
+        let oignon = Article(name: "Oignon", category: "Fruits et légumes", unit: "pièce(s)", isFood: true)
+        let riz = Article(name: "Riz", category: "Épicerie salée", unit: "g", isFood: true)
+        let poulet = Article(name: "Blanc de poulet", category: "Viandes", unit: "g", isFood: true)
+        
+        // Article non-alimentaire d'exemple
+        let savon = Article(name: "Savon", category: "Hygiène et beauté", unit: "pièce(s)", isFood: false)
         
         context.insert(carotte)
         context.insert(tomate)
         context.insert(oignon)
         context.insert(riz)
         context.insert(poulet)
+        context.insert(savon)
         
         // Recettes d'exemple
         let rizPoulet = Recipe(name: "Riz au poulet", details: "Un plat simple et rapide")
         context.insert(rizPoulet)
         
-        let recipeIngredient1 = RecipeIngredient(recipe: rizPoulet, ingredient: riz, quantity: 75, isOptional: false)
-        let recipeIngredient2 = RecipeIngredient(recipe: rizPoulet, ingredient: poulet, quantity: 150, isOptional: false)
-        let recipeIngredient3 = RecipeIngredient(recipe: rizPoulet, ingredient: oignon, quantity: 0.5, isOptional: true)
+        let recipeIngredient1 = RecipeIngredient(recipe: rizPoulet, article: riz, quantity: 75, isOptional: false)
+        let recipeIngredient2 = RecipeIngredient(recipe: rizPoulet, article: poulet, quantity: 150, isOptional: false)
+        let recipeIngredient3 = RecipeIngredient(recipe: rizPoulet, article: oignon, quantity: 0.5, isOptional: true)
         
         context.insert(recipeIngredient1)
         context.insert(recipeIngredient2)
@@ -79,10 +83,12 @@ struct SampleData {
         let shoppingList = ShoppingList()
         context.insert(shoppingList)
         
-        let shoppingItem1 = ShoppingListItem(shoppingList: shoppingList, ingredient: carotte, quantity: 3)
-        let shoppingItem2 = ShoppingListItem(shoppingList: shoppingList, ingredient: tomate, quantity: 4)
+        let shoppingItem1 = ShoppingListItem(shoppingList: shoppingList, article: carotte, quantity: 3)
+        let shoppingItem2 = ShoppingListItem(shoppingList: shoppingList, article: tomate, quantity: 4)
+        let shoppingItem3 = ShoppingListItem(shoppingList: shoppingList, article: savon, quantity: 1)
         
         context.insert(shoppingItem1)
         context.insert(shoppingItem2)
+        context.insert(shoppingItem3)
     }
 }

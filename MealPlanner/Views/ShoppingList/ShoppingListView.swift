@@ -20,7 +20,7 @@ struct ShoppingListView: View {
         // Simplification de l'expression pour éviter l'erreur de type-checking
         var result = [String: [ShoppingListItem]]()
         for item in items {
-            let category = item.ingredient?.category ?? "Autre"
+            let category = item.article?.category ?? "Autre"
             if result[category] == nil {
                 result[category] = []
             }
@@ -88,7 +88,7 @@ struct ShoppingListView: View {
 }
 
 struct ShoppingListItemRow: View {
-    @Bindable var item: ShoppingListItem  // Remplacé @ObservedObject par @Bindable
+    @Bindable var item: ShoppingListItem
     
     var body: some View {
         HStack {
@@ -101,14 +101,14 @@ struct ShoppingListItemRow: View {
             .buttonStyle(BorderlessButtonStyle())
             
             VStack(alignment: .leading) {
-                Text(item.ingredient?.name ?? "Ingrédient inconnu")
+                Text(item.article?.name ?? "Article inconnu")
                     .strikethrough(item.isChecked)
                     .foregroundColor(item.isChecked ? .secondary : .primary)
             }
             
             Spacer()
             
-            Text("\(String(format: "%.1f", item.quantity)) \(item.ingredient?.unit ?? "")")
+            Text("\(String(format: "%.1f", item.quantity)) \(item.article?.unit ?? "")")
                 .foregroundColor(.secondary)
         }
         .padding(.vertical, 4)
@@ -118,13 +118,32 @@ struct ShoppingListItemRow: View {
 #Preview {
     let config = ModelConfiguration(isStoredInMemoryOnly: true)
     let container = try! ModelContainer(
-        for: Recipe.self, Ingredient.self, RecipeIngredient.self,
+        for: Recipe.self, Article.self, RecipeIngredient.self,
         ShoppingList.self, ShoppingListItem.self,
         configurations: config
     )
     
     let context = container.mainContext
-    SampleData.createSampleData(in: context)
+    
+    // Créer des exemples de données
+    let shoppingList = ShoppingList()
+    context.insert(shoppingList)
+    
+    let carotte = Article(name: "Carotte", category: "Fruits et légumes", unit: "pièce(s)", isFood: true)
+    let tomate = Article(name: "Tomate", category: "Fruits et légumes", unit: "pièce(s)", isFood: true)
+    let lessive = Article(name: "Lessive", category: "Produits d'entretien", unit: "bouteille(s)", isFood: false)
+    
+    context.insert(carotte)
+    context.insert(tomate)
+    context.insert(lessive)
+    
+    let item1 = ShoppingListItem(shoppingList: shoppingList, article: carotte, quantity: 3)
+    let item2 = ShoppingListItem(shoppingList: shoppingList, article: tomate, quantity: 4)
+    let item3 = ShoppingListItem(shoppingList: shoppingList, article: lessive, quantity: 1)
+    
+    context.insert(item1)
+    context.insert(item2)
+    context.insert(item3)
     
     return NavigationStack {
         ShoppingListView()

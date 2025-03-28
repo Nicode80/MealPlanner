@@ -1,18 +1,15 @@
 import Foundation
-import SwiftData
+// Commenter ou supprimer l'import SwiftData
+// import SwiftData
 
-@Model
+// Commenter la directive @Model
+// @Model
 final class Ingredient {
     var name: String
-    var category: String  // Pour regrouper par rayon dans le supermarché
-    var unit: String      // Unité de mesure (g, kg, pièce, etc.)
+    var category: String
+    var unit: String
     
-    // Relations - empêcher la suppression d'un ingrédient s'il est référencé
-    @Relationship(deleteRule: .deny, inverse: \RecipeIngredient.ingredient)
-    var recipeIngredients: [RecipeIngredient]?
-    
-    @Relationship(deleteRule: .deny, inverse: \ShoppingListItem.ingredient)
-    var shoppingListItems: [ShoppingListItem]?
+    // Relations déjà commentées
     
     init(name: String, category: String, unit: String) {
         self.name = name

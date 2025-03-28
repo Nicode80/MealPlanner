@@ -53,10 +53,10 @@ class RecipeViewModel {
         newRecipePhotoData = nil
     }
     
-    func addIngredientToRecipe(recipe: Recipe, ingredient: Ingredient, quantity: Double, isOptional: Bool = false) {
+    func addIngredientToRecipe(recipe: Recipe, article: Article, quantity: Double, isOptional: Bool = false) {
         let recipeIngredient = RecipeIngredient(
             recipe: recipe,
-            ingredient: ingredient,
+            article: article,
             quantity: quantity,
             isOptional: isOptional
         )

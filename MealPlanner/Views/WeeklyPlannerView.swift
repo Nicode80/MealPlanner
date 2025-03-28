@@ -6,7 +6,7 @@ struct PlannedMeal: Identifiable {
     var id = UUID()
     var recipe: Recipe
     var numberOfPeople: Int
-    var dayOfWeek: Int  // 0 = Lundi, 1 = Mardi, etc.
+    var dayOfWeek: Int // 0 = Lundi, 1 = Mardi, etc.
     var mealType: MealType
     
     enum MealType: String, CaseIterable, Identifiable {
@@ -111,6 +111,7 @@ struct WeeklyPlannerView: View {
             dayOfWeek: dayOfWeek,
             mealType: mealType
         )
+        
         plannedMeals.append(newMeal)
     }
     
@@ -121,9 +122,9 @@ struct WeeklyPlannerView: View {
     private func generateShoppingList() {
         // Trouve ou crée une liste de courses
         var shoppingList: ShoppingList
+        
         if let existingList = shoppingLists.first {
             shoppingList = existingList
-            
             // Effacer les éléments existants
             if let items = shoppingList.items {
                 items.forEach { modelContext.delete($0) }
@@ -134,29 +135,28 @@ struct WeeklyPlannerView: View {
             modelContext.insert(shoppingList)
         }
         
-        // Un dictionnaire pour regrouper les ingrédients
-        var ingredientQuantities: [Ingredient: Double] = [:]
+        // Un dictionnaire pour regrouper les articles
+        var articleQuantities: [Article: Double] = [:]
         
         // Parcourir les repas planifiés
         for meal in plannedMeals {
             if let recipeIngredients = meal.recipe.ingredients {
                 for recipeIngredient in recipeIngredients {
-                    if let ingredient = recipeIngredient.ingredient {
+                    if let article = recipeIngredient.article {
                         // Calcule la quantité totale en fonction du nombre de personnes
                         let totalQuantity = recipeIngredient.quantity * Double(meal.numberOfPeople)
-                        
                         // Ajoute ou met à jour la quantité dans le dictionnaire
-                        ingredientQuantities[ingredient, default: 0] += totalQuantity
+                        articleQuantities[article, default: 0] += totalQuantity
                     }
                 }
             }
         }
         
         // Créer les éléments de la liste de courses
-        for (ingredient, quantity) in ingredientQuantities {
+        for (article, quantity) in articleQuantities {
             let item = ShoppingListItem(
                 shoppingList: shoppingList,
-                ingredient: ingredient,
+                article: article,
                 quantity: quantity
             )
             modelContext.insert(item)
@@ -221,19 +221,22 @@ struct AddPlannedMealView: View {
     }
 }
 
-#Preview {
-    let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(
-        for: Recipe.self, Ingredient.self, RecipeIngredient.self,
-        ShoppingList.self, ShoppingListItem.self,
-        configurations: config
-    )
-    
-    let context = container.mainContext
-    SampleData.createSampleData(in: context)
-    
-    return NavigationStack {
-        WeeklyPlannerView()
+// Utilisation de l'ancienne syntaxe de prévisualisation pour éviter des problèmes de compilation
+struct WeeklyPlannerView_Previews: PreviewProvider {
+    static var previews: some View {
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try! ModelContainer(
+            for: Recipe.self, Article.self, RecipeIngredient.self,
+            ShoppingList.self, ShoppingListItem.self,
+            configurations: config
+        )
+        
+        let context = container.mainContext
+        SampleData.createSampleData(in: context)
+        
+        return NavigationStack {
+            WeeklyPlannerView()
+        }
+        .modelContainer(container)
     }
-    .modelContainer(container)
 }

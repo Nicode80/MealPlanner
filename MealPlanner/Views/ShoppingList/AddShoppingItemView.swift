@@ -7,37 +7,37 @@ struct AddShoppingItemView: View {
     
     let shoppingList: ShoppingList
     
-    @State private var selectedIngredient: Ingredient?
+    @State private var selectedArticle: Article?
     @State private var quantity: Double = 1.0
-    @State private var showingIngredientSelection = false
+    @State private var showingArticleSelection = false
     
-    @Query private var ingredients: [Ingredient]
+    @Query private var articles: [Article]
     
     var body: some View {
         NavigationView {
             Form {
-                Section(header: Text("Ingrédient")) {
-                    if let ingredient = selectedIngredient {
+                Section(header: Text("Article")) {
+                    if let article = selectedArticle {
                         HStack {
-                            Text(ingredient.name)
+                            Text(article.name)
                             Spacer()
                             Button("Changer") {
-                                showingIngredientSelection = true
+                                showingArticleSelection = true
                             }
                         }
                     } else {
-                        Button("Sélectionner un ingrédient") {
-                            showingIngredientSelection = true
+                        Button("Sélectionner un article") {
+                            showingArticleSelection = true
                         }
                     }
                 }
                 
-                if let ingredient = selectedIngredient {
+                if let article = selectedArticle {
                     Section(header: Text("Quantité")) {
                         // Sélecteur de quantité avec boutons + et -
                         HStack {
                             Button(action: {
-                                let step = getStepValue(for: ingredient.unit)
+                                let step = getStepValue(for: article.unit)
                                 quantity = max(step, quantity - step)
                             }) {
                                 Image(systemName: "minus.circle.fill")
@@ -47,7 +47,7 @@ struct AddShoppingItemView: View {
                             
                             Spacer()
                             
-                            if isDecimalUnit(ingredient.unit) {
+                            if isDecimalUnit(article.unit) {
                                 // Pour kg/l, afficher avec une décimale
                                 TextField("Quantité", value: $quantity, format: .number.precision(.fractionLength(1)))
                                     .keyboardType(.decimalPad)
@@ -64,7 +64,7 @@ struct AddShoppingItemView: View {
                             Spacer()
                             
                             Button(action: {
-                                let step = getStepValue(for: ingredient.unit)
+                                let step = getStepValue(for: article.unit)
                                 quantity += step
                             }) {
                                 Image(systemName: "plus.circle.fill")
@@ -74,7 +74,7 @@ struct AddShoppingItemView: View {
                         }
                         
                         // Unité de mesure
-                        Text(ingredient.unit)
+                        Text(article.unit)
                             .foregroundColor(.secondary)
                             .frame(maxWidth: .infinity, alignment: .center)
                     }
@@ -84,7 +84,7 @@ struct AddShoppingItemView: View {
                     Button("Ajouter à la liste") {
                         addItemToShoppingList()
                     }
-                    .disabled(selectedIngredient == nil)
+                    .disabled(selectedArticle == nil)
                 }
             }
             .navigationTitle("Ajouter un article")
@@ -95,13 +95,13 @@ struct AddShoppingItemView: View {
                     }
                 }
             }
-            .sheet(isPresented: $showingIngredientSelection) {
-                IngredientSelectionView(
+            .sheet(isPresented: $showingArticleSelection) {
+                ArticleSelectionView(
                     forRecipe: false,  // Important: indique qu'on n'est pas dans le contexte d'une recette
-                    onIngredientSelected: { ingredient, selectedQuantity, _ in
-                        selectedIngredient = ingredient
+                    onArticleSelected: { article, selectedQuantity, _ in
+                        selectedArticle = article
                         quantity = selectedQuantity
-                        showingIngredientSelection = false
+                        showingArticleSelection = false
                     }
                 )
             }
@@ -109,18 +109,18 @@ struct AddShoppingItemView: View {
     }
     
     private func addItemToShoppingList() {
-        guard let ingredient = selectedIngredient else { return }
+        guard let article = selectedArticle else { return }
         
-        // Vérifier si l'ingrédient existe déjà dans la liste
+        // Vérifier si l'article existe déjà dans la liste
         if let existingItems = shoppingList.items,
-           let existingItem = existingItems.first(where: { $0.ingredient?.id == ingredient.id }) {
+           let existingItem = existingItems.first(where: { $0.article?.id == article.id }) {
             // Si oui, augmenter la quantité
             existingItem.quantity += quantity
         } else {
             // Sinon, créer un nouvel élément
             let newItem = ShoppingListItem(
                 shoppingList: shoppingList,
-                ingredient: ingredient,
+                article: article,
                 quantity: quantity
             )
             
@@ -150,29 +150,27 @@ struct AddShoppingItemView: View {
     }
 }
 
-struct AddShoppingItemView_Previews: PreviewProvider {
-    static var previews: some View {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
-        let container = try! ModelContainer(
-            for: Recipe.self, Ingredient.self, RecipeIngredient.self,
-            ShoppingList.self, ShoppingListItem.self,
-            configurations: config
-        )
-        
-        let context = container.mainContext
-        
-        // Créer un exemple de liste de courses
-        let shoppingList = ShoppingList()
-        context.insert(shoppingList)
-        
-        // Créer quelques ingrédients
-        let carotte = Ingredient(name: "Carotte", category: "Fruits et légumes", unit: "pièce(s)")
-        let tomate = Ingredient(name: "Tomate", category: "Fruits et légumes", unit: "pièce(s)")
-        
-        context.insert(carotte)
-        context.insert(tomate)
-        
-        return AddShoppingItemView(shoppingList: shoppingList)
-            .modelContainer(container)
-    }
+#Preview {
+    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    let container = try! ModelContainer(
+        for: Recipe.self, Article.self, RecipeIngredient.self,
+        ShoppingList.self, ShoppingListItem.self,
+        configurations: config
+    )
+    
+    let context = container.mainContext
+    
+    // Créer un exemple de liste de courses
+    let shoppingList = ShoppingList()
+    context.insert(shoppingList)
+    
+    // Créer quelques articles
+    let carotte = Article(name: "Carotte", category: "Fruits et légumes", unit: "pièce(s)", isFood: true)
+    let tomate = Article(name: "Tomate", category: "Fruits et légumes", unit: "pièce(s)", isFood: true)
+    
+    context.insert(carotte)
+    context.insert(tomate)
+    
+    return AddShoppingItemView(shoppingList: shoppingList)
+        .modelContainer(container)
 }

@@ -1,6 +1,6 @@
 import SwiftUI
 import SwiftData
-import Observation  // Ajout de l'import pour @Bindable
+import Observation
 
 @main
 struct MealPlannerApp: App {
@@ -10,10 +10,10 @@ struct MealPlannerApp: App {
         }
         .modelContainer(for: [
             Recipe.self,
-            Ingredient.self,
+            Article.self,  // Nouveau modèle Article (remplace Ingredient)
             RecipeIngredient.self,
             ShoppingList.self,
             ShoppingListItem.self
-        ])
+        ], inMemory: false)
     }
 }
