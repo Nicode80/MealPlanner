@@ -4,6 +4,7 @@ import SwiftData
 struct RecipeDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @Bindable var recipe: Recipe
+    
     @State private var showingAddIngredient = false
     @State private var showingEditRecipe = false
     
@@ -44,9 +45,7 @@ struct RecipeDetailView: View {
                     HStack {
                         Text("Ingrédients par personne")
                             .font(.headline)
-                        
                         Spacer()
-                        
                         Button {
                             showingAddIngredient = true
                         } label: {
@@ -55,25 +54,21 @@ struct RecipeDetailView: View {
                     }
                     
                     if let ingredients = recipe.ingredients, !ingredients.isEmpty {
-                        ForEach(ingredients) { recipeIngredient in
-                            if let article = recipeIngredient.article {
+                        ForEach(ingredients) { recipeArticle in
+                            if let article = recipeArticle.article {
                                 HStack {
                                     Text("\(article.name)")
-                                    
                                     Spacer()
-                                    
-                                    Text("\(String(format: "%.1f", recipeIngredient.quantity)) \(article.unit)")
+                                    Text("\(String(format: "%.1f", recipeArticle.quantity)) \(article.unit)")
                                         .foregroundColor(.secondary)
-                                    
-                                    if recipeIngredient.isOptional {
+                                    if recipeArticle.isOptional {
                                         Text("(optionnel)")
                                             .font(.caption)
                                             .foregroundColor(.secondary)
                                             .italic()
                                     }
-                                    
                                     Button {
-                                        removeIngredient(recipeIngredient)
+                                        removeIngredient(recipeArticle)
                                     } label: {
                                         Image(systemName: "trash")
                                             .foregroundColor(.red)
@@ -110,19 +105,17 @@ struct RecipeDetailView: View {
                 recipeName: recipe.name,
                 onArticleSelected: { article, quantity, isOptional in
                     // Utiliser le modelContext pour ajouter l'ingrédient à la recette
-                    let recipeIngredient = RecipeIngredient(
+                    let recipeArticle = RecipeArticle(
                         recipe: recipe,
                         article: article,
                         quantity: quantity,
                         isOptional: isOptional
                     )
-                    
-                    modelContext.insert(recipeIngredient)
-                    
+                    modelContext.insert(recipeArticle)
                     if recipe.ingredients == nil {
-                        recipe.ingredients = [recipeIngredient]
+                        recipe.ingredients = [recipeArticle]
                     } else {
-                        recipe.ingredients?.append(recipeIngredient)
+                        recipe.ingredients?.append(recipeArticle)
                     }
                 }
             )
@@ -132,10 +125,10 @@ struct RecipeDetailView: View {
         }
     }
     
-    private func removeIngredient(_ recipeIngredient: RecipeIngredient) {
-        if let index = recipe.ingredients?.firstIndex(where: { $0.id == recipeIngredient.id }) {
+    private func removeIngredient(_ recipeArticle: RecipeArticle) {
+        if let index = recipe.ingredients?.firstIndex(where: { $0.id == recipeArticle.id }) {
             recipe.ingredients?.remove(at: index)
-            modelContext.delete(recipeIngredient)
+            modelContext.delete(recipeArticle)
         }
     }
 }
@@ -144,15 +137,13 @@ struct RecipeDetailView_Previews: PreviewProvider {
     static var previews: some View {
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try! ModelContainer(
-            for: Recipe.self, Article.self, RecipeIngredient.self,
+            for: Recipe.self, Article.self, RecipeArticle.self,
             configurations: config
         )
-        
         let context = container.mainContext
         
         // Créer un exemple de recette
         let recipe = Recipe(name: "Pâtes à la carbonara", details: "Un classique italien facile et délicieux.")
-        
         let spaghetti = Article(name: "Spaghetti", category: "Épicerie salée", unit: "g", isFood: true)
         let bacon = Article(name: "Lardons", category: "Viandes", unit: "g", isFood: true)
         let egg = Article(name: "Œuf", category: "Produits laitiers", unit: "pièce(s)", isFood: true)
@@ -164,10 +155,10 @@ struct RecipeDetailView_Previews: PreviewProvider {
         context.insert(egg)
         context.insert(cheese)
         
-        let ingredient1 = RecipeIngredient(recipe: recipe, article: spaghetti, quantity: 100, isOptional: false)
-        let ingredient2 = RecipeIngredient(recipe: recipe, article: bacon, quantity: 50, isOptional: false)
-        let ingredient3 = RecipeIngredient(recipe: recipe, article: egg, quantity: 1, isOptional: false)
-        let ingredient4 = RecipeIngredient(recipe: recipe, article: cheese, quantity: 20, isOptional: false)
+        let ingredient1 = RecipeArticle(recipe: recipe, article: spaghetti, quantity: 100, isOptional: false)
+        let ingredient2 = RecipeArticle(recipe: recipe, article: bacon, quantity: 50, isOptional: false)
+        let ingredient3 = RecipeArticle(recipe: recipe, article: egg, quantity: 1, isOptional: false)
+        let ingredient4 = RecipeArticle(recipe: recipe, article: cheese, quantity: 20, isOptional: false)
         
         context.insert(ingredient1)
         context.insert(ingredient2)

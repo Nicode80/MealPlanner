@@ -111,7 +111,6 @@ struct WeeklyPlannerView: View {
             dayOfWeek: dayOfWeek,
             mealType: mealType
         )
-        
         plannedMeals.append(newMeal)
     }
     
@@ -122,7 +121,6 @@ struct WeeklyPlannerView: View {
     private func generateShoppingList() {
         // Trouve ou crée une liste de courses
         var shoppingList: ShoppingList
-        
         if let existingList = shoppingLists.first {
             shoppingList = existingList
             // Effacer les éléments existants
@@ -141,10 +139,11 @@ struct WeeklyPlannerView: View {
         // Parcourir les repas planifiés
         for meal in plannedMeals {
             if let recipeIngredients = meal.recipe.ingredients {
-                for recipeIngredient in recipeIngredients {
-                    if let article = recipeIngredient.article {
+                for recipeArticle in recipeIngredients {
+                    if let article = recipeArticle.article {
                         // Calcule la quantité totale en fonction du nombre de personnes
-                        let totalQuantity = recipeIngredient.quantity * Double(meal.numberOfPeople)
+                        let totalQuantity = recipeArticle.quantity * Double(meal.numberOfPeople)
+                        
                         // Ajoute ou met à jour la quantité dans le dictionnaire
                         articleQuantities[article, default: 0] += totalQuantity
                     }
@@ -226,11 +225,10 @@ struct WeeklyPlannerView_Previews: PreviewProvider {
     static var previews: some View {
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try! ModelContainer(
-            for: Recipe.self, Article.self, RecipeIngredient.self,
+            for: Recipe.self, Article.self, RecipeArticle.self,
             ShoppingList.self, ShoppingListItem.self,
             configurations: config
         )
-        
         let context = container.mainContext
         SampleData.createSampleData(in: context)
         

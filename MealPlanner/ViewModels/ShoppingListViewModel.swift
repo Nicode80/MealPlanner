@@ -9,6 +9,7 @@ class ShoppingListViewModel: ObservableObject {
     init(modelContext: ModelContext) {
         self.modelContext = modelContext
         fetchShoppingLists()
+        
         // Si aucune liste n'existe, en créer une par défaut
         if shoppingLists.isEmpty {
             createNewShoppingList()
@@ -48,6 +49,7 @@ class ShoppingListViewModel: ObservableObject {
                 shoppingList.items?.append(newItem)
             }
         }
+        
         // Mettre à jour la date de modification
         shoppingList.modificationDate = Date()
         saveContext()
@@ -70,6 +72,7 @@ class ShoppingListViewModel: ObservableObject {
         modelContext.delete(shoppingList)
         saveContext()
         fetchShoppingLists()
+        
         // Si on a supprimé la liste courante, prendre la première de la liste ou en créer une nouvelle
         if currentShoppingList?.id == shoppingList.id {
             if !shoppingLists.isEmpty {
@@ -84,10 +87,11 @@ class ShoppingListViewModel: ObservableObject {
         let targetList = shoppingList ?? currentShoppingList
         guard let targetList = targetList, let ingredients = recipe.ingredients else { return }
         
-        for recipeIngredient in ingredients {
-            if let article = recipeIngredient.article {
+        for recipeArticle in ingredients {
+            if let article = recipeArticle.article {
                 // Calculer la quantité en fonction du nombre de personnes
-                let totalQuantity = recipeIngredient.quantity * Double(numberOfPeople)
+                let totalQuantity = recipeArticle.quantity * Double(numberOfPeople)
+                
                 // Ajouter à la liste de courses
                 addItemToShoppingList(shoppingList: targetList, article: article, quantity: totalQuantity)
             }

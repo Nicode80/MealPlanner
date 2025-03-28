@@ -118,7 +118,7 @@ struct ShoppingListItemRow: View {
 #Preview {
     let config = ModelConfiguration(isStoredInMemoryOnly: true)
     let container = try! ModelContainer(
-        for: Recipe.self, Article.self, RecipeIngredient.self,
+        for: Recipe.self, Article.self, RecipeArticle.self,
         ShoppingList.self, ShoppingListItem.self,
         configurations: config
     )

@@ -34,7 +34,7 @@ struct ContentView: View {
     // Création d'un conteneur en mémoire pour la prévisualisation
     let config = ModelConfiguration(isStoredInMemoryOnly: true)
     let container = try! ModelContainer(
-        for: Recipe.self, Article.self, RecipeIngredient.self,
+        for: Recipe.self, Article.self, RecipeArticle.self,
         ShoppingList.self, ShoppingListItem.self,
         configurations: config
     )
@@ -71,9 +71,9 @@ struct SampleData {
         let rizPoulet = Recipe(name: "Riz au poulet", details: "Un plat simple et rapide")
         context.insert(rizPoulet)
         
-        let recipeIngredient1 = RecipeIngredient(recipe: rizPoulet, article: riz, quantity: 75, isOptional: false)
-        let recipeIngredient2 = RecipeIngredient(recipe: rizPoulet, article: poulet, quantity: 150, isOptional: false)
-        let recipeIngredient3 = RecipeIngredient(recipe: rizPoulet, article: oignon, quantity: 0.5, isOptional: true)
+        let recipeIngredient1 = RecipeArticle(recipe: rizPoulet, article: riz, quantity: 75, isOptional: false)
+        let recipeIngredient2 = RecipeArticle(recipe: rizPoulet, article: poulet, quantity: 150, isOptional: false)
+        let recipeIngredient3 = RecipeArticle(recipe: rizPoulet, article: oignon, quantity: 0.5, isOptional: true)
         
         context.insert(recipeIngredient1)
         context.insert(recipeIngredient2)

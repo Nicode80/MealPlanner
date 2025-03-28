@@ -6,7 +6,6 @@ import Observation
 @Observable
 class RecipeViewModel {
     private var modelContext: ModelContext
-    
     var recipes: [Recipe] = []
     
     // Pour la création d'une nouvelle recette
@@ -54,28 +53,28 @@ class RecipeViewModel {
     }
     
     func addIngredientToRecipe(recipe: Recipe, article: Article, quantity: Double, isOptional: Bool = false) {
-        let recipeIngredient = RecipeIngredient(
+        let recipeArticle = RecipeArticle(
             recipe: recipe,
             article: article,
             quantity: quantity,
             isOptional: isOptional
         )
         
-        modelContext.insert(recipeIngredient)
+        modelContext.insert(recipeArticle)
         
         if recipe.ingredients == nil {
-            recipe.ingredients = [recipeIngredient]
+            recipe.ingredients = [recipeArticle]
         } else {
-            recipe.ingredients?.append(recipeIngredient)
+            recipe.ingredients?.append(recipeArticle)
         }
         
         try? modelContext.save()
     }
     
-    func removeIngredientFromRecipe(recipe: Recipe, recipeIngredient: RecipeIngredient) {
-        if let index = recipe.ingredients?.firstIndex(where: { $0.id == recipeIngredient.id }) {
+    func removeIngredientFromRecipe(recipe: Recipe, recipeArticle: RecipeArticle) {
+        if let index = recipe.ingredients?.firstIndex(where: { $0.id == recipeArticle.id }) {
             recipe.ingredients?.remove(at: index)
-            modelContext.delete(recipeIngredient)
+            modelContext.delete(recipeArticle)
             try? modelContext.save()
         }
     }

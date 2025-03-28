@@ -1,8 +1,8 @@
-/*import Foundation
+import Foundation
 import SwiftData
 
 @Model
-final class RecipeIngredient {
+final class RecipeArticle {
     // Quantité pour 1 personne
     var quantity: Double
     var isOptional: Bool
@@ -21,4 +21,3 @@ final class RecipeIngredient {
         self.isOptional = isOptional
     }
 }
-*/

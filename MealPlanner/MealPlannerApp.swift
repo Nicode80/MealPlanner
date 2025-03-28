@@ -10,8 +10,8 @@ struct MealPlannerApp: App {
         }
         .modelContainer(for: [
             Recipe.self,
-            Article.self,  // Nouveau modèle Article (remplace Ingredient)
-            RecipeIngredient.self,
+            Article.self,
+            RecipeArticle.self,
             ShoppingList.self,
             ShoppingListItem.self
         ], inMemory: false)
