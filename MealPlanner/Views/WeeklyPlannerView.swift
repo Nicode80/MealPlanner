@@ -1,31 +1,6 @@
 import SwiftUI
 import SwiftData
-
-// Structure pour représenter un repas planifié
-struct PlannedMeal: Identifiable, Equatable {
-    var id = UUID()
-    var recipe: Recipe
-    var numberOfPeople: Int
-    var dayOfWeek: Int // 0 = Lundi, 1 = Mardi, etc.
-    var mealType: MealType
-    
-    enum MealType: String, CaseIterable, Identifiable {
-        case breakfast = "Petit-déjeuner"
-        case lunch = "Déjeuner"
-        case dinner = "Dîner"
-        
-        var id: String { self.rawValue }
-    }
-    
-    // Implémentation de Equatable pour permettre la comparaison
-    static func == (lhs: PlannedMeal, rhs: PlannedMeal) -> Bool {
-        lhs.id == rhs.id &&
-        lhs.recipe.id == rhs.recipe.id &&
-        lhs.numberOfPeople == rhs.numberOfPeople &&
-        lhs.dayOfWeek == rhs.dayOfWeek &&
-        lhs.mealType == rhs.mealType
-    }
-}
+import Combine
 
 // Vue principale du planificateur hebdomadaire
 struct WeeklyPlannerView: View {
@@ -33,7 +8,8 @@ struct WeeklyPlannerView: View {
     @Query private var recipes: [Recipe]
     @Query private var shoppingLists: [ShoppingList]
     
-    @State private var plannedMeals: [PlannedMeal] = []
+    // Utiliser ObservedObject pour observer les changements de PlannerManager
+    @ObservedObject private var plannerManager = PlannerManager.shared
     @State private var showingAddMeal = false
     @State private var selectedDay = 0
     @State private var selectedMealType = PlannedMeal.MealType.dinner
@@ -46,7 +22,8 @@ struct WeeklyPlannerView: View {
                 DaySection(
                     dayName: daysOfWeek[dayIndex],
                     dayIndex: dayIndex,
-                    plannedMeals: plannedMeals,
+                    plannedMeals: plannerManager.mealsForDay(dayIndex),
+                    recipes: recipes,
                     onAddMeal: { dayIdx, mealType in
                         selectedDay = dayIdx
                         selectedMealType = mealType
@@ -69,9 +46,6 @@ struct WeeklyPlannerView: View {
                 }
             )
         }
-        .onChange(of: plannedMeals) { _, _ in
-            updateShoppingList()
-        }
         .onAppear {
             updateShoppingList()
         }
@@ -84,19 +58,22 @@ struct WeeklyPlannerView: View {
             dayOfWeek: dayOfWeek,
             mealType: mealType
         )
-        plannedMeals.append(newMeal)
+        plannerManager.addMeal(newMeal)
+        updateShoppingList()
     }
     
     private func removePlannedMeal(_ meal: PlannedMeal) {
-        plannedMeals.removeAll { $0.id == meal.id }
+        plannerManager.removeMeal(meal)
+        updateShoppingList()
     }
     
     private func updateShoppingList() {
-        // La logique complète de mise à jour de la liste de courses est déléguée à un service
+        // Mettre à jour la liste de courses avec les repas planifiés
         ShoppingListUpdater.update(
-            with: plannedMeals,
+            with: plannerManager.getAllMeals(),
             modelContext: modelContext,
-            shoppingLists: shoppingLists
+            shoppingLists: shoppingLists,
+            recipes: recipes
         )
     }
 }
@@ -106,6 +83,7 @@ struct DaySection: View {
     let dayName: String
     let dayIndex: Int
     let plannedMeals: [PlannedMeal]
+    let recipes: [Recipe]
     let onAddMeal: (Int, PlannedMeal.MealType) -> Void
     let onDeleteMeal: (PlannedMeal) -> Void
     
@@ -115,7 +93,8 @@ struct DaySection: View {
                 MealTypeRow(
                     mealType: mealType,
                     dayIndex: dayIndex,
-                    plannedMeals: plannedMeals,
+                    plannedMeals: plannedMeals.filter { $0.mealType == mealType },
+                    recipes: recipes,
                     onAddMeal: onAddMeal,
                     onDeleteMeal: onDeleteMeal
                 )
@@ -129,6 +108,7 @@ struct MealTypeRow: View {
     let mealType: PlannedMeal.MealType
     let dayIndex: Int
     let plannedMeals: [PlannedMeal]
+    let recipes: [Recipe]
     let onAddMeal: (Int, PlannedMeal.MealType) -> Void
     let onDeleteMeal: (PlannedMeal) -> Void
     
@@ -138,12 +118,7 @@ struct MealTypeRow: View {
                 .font(.subheadline)
                 .foregroundColor(.secondary)
             
-            // Filtre les repas pour ce jour et ce type de repas
-            let filteredMeals = plannedMeals.filter {
-                $0.dayOfWeek == dayIndex && $0.mealType == mealType
-            }
-            
-            if filteredMeals.isEmpty {
+            if plannedMeals.isEmpty {
                 Button {
                     onAddMeal(dayIndex, mealType)
                 } label: {
@@ -151,11 +126,18 @@ struct MealTypeRow: View {
                         .foregroundColor(.blue)
                 }
             } else {
-                ForEach(filteredMeals) { meal in
-                    MealRow(
-                        meal: meal,
-                        onDelete: onDeleteMeal
-                    )
+                ForEach(plannedMeals) { meal in
+                    if let recipe = recipes.first(where: { $0.persistentModelID == meal.recipeId }) {
+                        MealRow(
+                            meal: meal,
+                            recipeName: recipe.name,
+                            onDelete: onDeleteMeal
+                        )
+                    } else {
+                        Text("Recette non trouvée")
+                            .foregroundColor(.secondary)
+                            .italic()
+                    }
                 }
             }
         }
@@ -165,12 +147,13 @@ struct MealTypeRow: View {
 // Composant pour une ligne de repas
 struct MealRow: View {
     let meal: PlannedMeal
+    let recipeName: String
     let onDelete: (PlannedMeal) -> Void
     
     var body: some View {
         HStack {
             VStack(alignment: .leading) {
-                Text(meal.recipe.name)
+                Text(recipeName)
                     .font(.headline)
                 Text("Pour \(meal.numberOfPeople) personne(s)")
                     .font(.caption)
@@ -190,111 +173,6 @@ struct MealRow: View {
     }
 }
 
-// Service pour la mise à jour de la liste de courses
-struct ShoppingListUpdater {
-    static func update(with plannedMeals: [PlannedMeal], modelContext: ModelContext, shoppingLists: [ShoppingList]) {
-        // Créer ou récupérer la liste de courses
-        let shoppingList = getOrCreateShoppingList(from: shoppingLists, modelContext: modelContext)
-        
-        // Mettre à jour les articles
-        updateShoppingItems(
-            shoppingList: shoppingList,
-            plannedMeals: plannedMeals,
-            modelContext: modelContext
-        )
-    }
-    
-    private static func getOrCreateShoppingList(from shoppingLists: [ShoppingList], modelContext: ModelContext) -> ShoppingList {
-        if let existingList = shoppingLists.first {
-            return existingList
-        } else {
-            let newList = ShoppingList()
-            modelContext.insert(newList)
-            return newList
-        }
-    }
-    
-    private static func updateShoppingItems(shoppingList: ShoppingList, plannedMeals: [PlannedMeal], modelContext: ModelContext) {
-        // 1. Créer un dictionnaire des articles existants
-        var existingItemsByArticle = [Article: ShoppingListItem]()
-        if let items = shoppingList.items {
-            for item in items {
-                if let article = item.article {
-                    existingItemsByArticle[article] = item
-                }
-            }
-        }
-        
-        // 2. Calculer les quantités des recettes
-        var recipeQuantities = [Article: Double]()
-        for meal in plannedMeals {
-            if let ingredients = meal.recipe.ingredients {
-                for ingredient in ingredients {
-                    if let article = ingredient.article {
-                        let quantity = ingredient.quantity * Double(meal.numberOfPeople)
-                        recipeQuantities[article, default: 0] += quantity
-                    }
-                }
-            }
-        }
-        
-        // 3. Traiter tous les articles existants
-        var processedArticles = Set<Article>()
-        
-        // 3a. D'abord, mettre à jour les articles qui sont dans les recettes
-        for (article, recipeQuantity) in recipeQuantities {
-            if let existingItem = existingItemsByArticle[article] {
-                // Calculer la nouvelle quantité totale: recette + ajustement manuel
-                let newTotalQuantity = recipeQuantity + existingItem.manualQuantity
-                
-                // Mettre à jour la quantité totale
-                existingItem.quantity = max(0, newTotalQuantity) // Éviter les quantités négatives
-                
-                // Marquer comme traité
-                processedArticles.insert(article)
-            } else {
-                // L'article n'existe pas encore, donc créer un nouvel élément
-                let newItem = ShoppingListItem(
-                    shoppingList: shoppingList,
-                    article: article,
-                    quantity: recipeQuantity,
-                    isManuallyAdded: false,
-                    manualQuantity: 0.0
-                )
-                modelContext.insert(newItem)
-                if shoppingList.items == nil {
-                    shoppingList.items = [newItem]
-                } else {
-                    shoppingList.items?.append(newItem)
-                }
-                
-                // Marquer comme traité
-                processedArticles.insert(article)
-            }
-        }
-        
-        // 3b. Ensuite, conserver les articles ajoutés manuellement qui ne sont plus dans les recettes
-        if let items = shoppingList.items {
-            for item in items {
-                if let article = item.article, !processedArticles.contains(article) {
-                    if item.isManuallyAdded && item.manualQuantity > 0 {
-                        // Garder les articles manuels avec une quantité positive
-                        // La quantité totale devient simplement la quantité manuelle
-                        item.quantity = item.manualQuantity
-                    } else if !item.isManuallyAdded {
-                        // Supprimer les articles non manuels qui ne sont plus nécessaires
-                        modelContext.delete(item)
-                        shoppingList.items?.removeAll(where: { $0.id == item.id })
-                    }
-                }
-            }
-        }
-        
-        // 4. Mettre à jour la date de modification
-        shoppingList.modificationDate = Date()
-    }
-}
-
 struct AddPlannedMealView: View {
     let recipes: [Recipe]
     let dayOfWeek: Int
@@ -303,9 +181,27 @@ struct AddPlannedMealView: View {
     
     @State private var selectedRecipe: Recipe?
     @State private var numberOfPeople = 2
+    @State private var searchText = ""
     @Environment(\.dismiss) private var dismiss
     
     let daysOfWeek = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+    
+    // Filtrer les recettes pour n'afficher que celles avec des ingrédients
+    private var recipesWithIngredients: [Recipe] {
+        return recipes.filter { $0.hasIngredients }
+    }
+    
+    // Filtrer les recettes en fonction du texte de recherche
+    private var filteredRecipes: [Recipe] {
+        guard !searchText.isEmpty else {
+            return recipesWithIngredients
+        }
+        
+        return recipesWithIngredients.filter { recipe in
+            recipe.name.localizedCaseInsensitiveContains(searchText) ||
+            (recipe.details?.localizedCaseInsensitiveContains(searchText) ?? false)
+        }
+    }
     
     var body: some View {
         NavigationView {
@@ -315,10 +211,35 @@ struct AddPlannedMealView: View {
                 }
                 
                 Section(header: Text("Recette")) {
-                    Picker("Sélectionner une recette", selection: $selectedRecipe) {
-                        Text("Choisir une recette").tag(nil as Recipe?)
-                        ForEach(recipes) { recipe in
-                            Text(recipe.name).tag(recipe as Recipe?)
+                    if recipesWithIngredients.isEmpty {
+                        Text("Aucune recette complète disponible")
+                            .foregroundColor(.secondary)
+                            .italic()
+                    } else {
+                        // Barre de recherche
+                        SearchBar(text: $searchText, placeholder: "Rechercher une recette")
+                            .padding(.vertical, 4)
+                        
+                        if filteredRecipes.isEmpty {
+                            Text("Aucune recette ne correspond à votre recherche")
+                                .foregroundColor(.secondary)
+                                .italic()
+                        } else {
+                            // Liste scrollable avec hauteur fixe
+                            ScrollView(.vertical, showsIndicators: true) {
+                                LazyVStack(alignment: .leading, spacing: 8) {
+                                    ForEach(filteredRecipes) { recipe in
+                                        RecipeSelectionRow(
+                                            recipe: recipe,
+                                            isSelected: selectedRecipe?.id == recipe.id,
+                                            onSelect: {
+                                                selectedRecipe = recipe
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                            .frame(height: 150) // Hauteur fixe pour éviter de prendre trop de place
                         }
                     }
                 }
@@ -335,6 +256,8 @@ struct AddPlannedMealView: View {
                         }
                     }
                     .disabled(selectedRecipe == nil)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .buttonStyle(.borderedProminent)
                 }
             }
             .navigationTitle("Ajouter un repas")
@@ -349,21 +272,34 @@ struct AddPlannedMealView: View {
     }
 }
 
-// Prévisualisation
-struct WeeklyPlannerView_Previews: PreviewProvider {
-    static var previews: some View {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
-        let container = try! ModelContainer(
-            for: Recipe.self, Article.self, RecipeArticle.self,
-            ShoppingList.self, ShoppingListItem.self,
-            configurations: config
-        )
-        let context = container.mainContext
-        SampleData.createSampleData(in: context)
-        
-        return NavigationStack {
-            WeeklyPlannerView()
+// Composant pour représenter une ligne de recette sélectionnable
+struct RecipeSelectionRow: View {
+    let recipe: Recipe
+    let isSelected: Bool
+    let onSelect: () -> Void
+    
+    var body: some View {
+        Button(action: onSelect) {
+            HStack {
+                Text(recipe.name)
+                    .foregroundColor(.primary)
+                
+                Spacer()
+                
+                if isSelected {
+                    Image(systemName: "checkmark")
+                        .foregroundColor(.blue)
+                }
+            }
+            .contentShape(Rectangle())
+            .padding(.vertical, 6)
+            .padding(.horizontal, 4)
+            .background(
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(isSelected ? Color.blue.opacity(0.1) : Color.clear)
+            )
         }
-        .modelContainer(container)
+        .buttonStyle(PlainButtonStyle())
     }
 }
+

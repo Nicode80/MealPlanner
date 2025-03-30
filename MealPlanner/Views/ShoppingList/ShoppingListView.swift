@@ -16,7 +16,6 @@ struct ShoppingListView: View {
         guard let list = currentList, let items = list.items else {
             return [:]
         }
-        
         var result = [String: [ShoppingListItem]]()
         for item in items {
             let category = item.article?.category ?? "Autre"
@@ -115,7 +114,7 @@ struct ShoppingListView: View {
                 shoppingList: list,
                 article: article,
                 quantity: quantity,
-                isManuallyAdded: true  // Marquer comme manuel
+                isManuallyAdded: true // Marquer comme manuel
             )
             modelContext.insert(newItem)
             if list.items == nil {
@@ -124,7 +123,6 @@ struct ShoppingListView: View {
                 list.items?.append(newItem)
             }
         }
-        
         // Mettre à jour la date de modification
         list.modificationDate = Date()
     }
@@ -132,49 +130,11 @@ struct ShoppingListView: View {
     // Supprimer un article de la liste
     private func removeItem(_ item: ShoppingListItem) {
         guard let list = currentList else { return }
-        
         // Retirer l'élément de la liste
         list.items?.removeAll(where: { $0.id == item.id })
-        
         // Supprimer l'élément du contexte
         modelContext.delete(item)
-        
         // Mettre à jour la date de modification
         list.modificationDate = Date()
     }
-}
-
-#Preview {
-    let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(
-        for: Recipe.self, Article.self, RecipeArticle.self,
-        ShoppingList.self, ShoppingListItem.self,
-        configurations: config
-    )
-    let context = container.mainContext
-    
-    // Créer des exemples de données
-    let shoppingList = ShoppingList()
-    context.insert(shoppingList)
-    
-    let carotte = Article(name: "Carotte", category: "Fruits et légumes", unit: "pièce(s)", isFood: true)
-    let tomate = Article(name: "Tomate", category: "Fruits et légumes", unit: "pièce(s)", isFood: true)
-    let lessive = Article(name: "Lessive", category: "Produits d'entretien", unit: "bouteille(s)", isFood: false)
-    
-    context.insert(carotte)
-    context.insert(tomate)
-    context.insert(lessive)
-    
-    let item1 = ShoppingListItem(shoppingList: shoppingList, article: carotte, quantity: 3)
-    let item2 = ShoppingListItem(shoppingList: shoppingList, article: tomate, quantity: 4)
-    let item3 = ShoppingListItem(shoppingList: shoppingList, article: lessive, quantity: 1)
-    
-    context.insert(item1)
-    context.insert(item2)
-    context.insert(item3)
-    
-    return NavigationStack {
-        ShoppingListView()
-    }
-    .modelContainer(container)
 }

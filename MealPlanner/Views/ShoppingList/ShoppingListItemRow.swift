@@ -63,19 +63,7 @@ struct ShoppingListItemRow: View {
                     .buttonStyle(BorderlessButtonStyle())
                     
                     Button {
-                        // Calculer la différence entre la quantité éditée et la quantité actuelle
-                        let difference = editedQuantity - (item.quantity - item.manualQuantity)
-                        
-                        // Mettre à jour la quantité manuelle
-                        item.manualQuantity = difference
-                        
-                        // Mettre à jour la quantité totale
-                        item.quantity = editedQuantity
-                        
-                        // Marquer comme modifié manuellement
-                        item.isManuallyAdded = true
-                        
-                        isEditing = false
+                        saveChanges()
                     } label: {
                         Text("OK")
                             .foregroundColor(.blue)
@@ -95,14 +83,21 @@ struct ShoppingListItemRow: View {
                         editedQuantity = item.quantity
                     } label: {
                         Image(systemName: "pencil")
-                            .font(.caption)
-                            .foregroundColor(.gray)
+                            .font(.body)  // Augmenter la taille (au lieu de .caption)
+                            .foregroundColor(.blue)  // Changer la couleur (au lieu de .gray)
+                            .padding(8)  // Ajouter du padding pour une zone de toucher plus grande
                     }
                     .buttonStyle(BorderlessButtonStyle())
                 }
             }
         }
         .padding(.vertical, 4)
+        .onDisappear {
+            // Si nous sommes en mode édition lorsque la vue disparaît, sauvegarder les modifications
+            if isEditing {
+                saveChanges()
+            }
+        }
     }
     
     // Détermine si une unité utilise des valeurs décimales
@@ -113,5 +108,23 @@ struct ShoppingListItemRow: View {
     // Obtient le pas d'incrémentation pour une unité donnée
     private func getStepValue(for unit: String) -> Double {
         return isDecimalUnit(unit) ? 0.1 : 1.0
+    }
+    
+    // Fonction pour sauvegarder les changements
+    private func saveChanges() {
+        // Calculer la différence entre la quantité éditée et la quantité actuelle
+        let difference = editedQuantity - (item.quantity - item.manualQuantity)
+        
+        // Mettre à jour la quantité manuelle
+        item.manualQuantity = difference
+        
+        // Mettre à jour la quantité totale
+        item.quantity = editedQuantity
+        
+        // Marquer comme modifié manuellement
+        item.isManuallyAdded = true
+        
+        // Quitter le mode édition
+        isEditing = false
     }
 }
