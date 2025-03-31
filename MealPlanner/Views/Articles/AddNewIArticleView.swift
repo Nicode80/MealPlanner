@@ -4,7 +4,6 @@ import SwiftData
 struct AddNewArticleView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
-    
     var viewModel: ArticlesViewModel
     var forRecipe: Bool = true
     var onArticleCreated: (Article) -> Void
@@ -17,12 +16,15 @@ struct AddNewArticleView: View {
     @State private var similarArticle: Article?
     @State private var nameEdited = false
     @State private var attemptedToAdd = false
+    // Ajout de la variable pour le focus
+    @FocusState private var isNameFieldFocused: Bool
     
     var body: some View {
         NavigationView {
             Form {
                 Section(header: Text("Informations de l'article")) {
                     TextField("Nom", text: $name)
+                        .focused($isNameFieldFocused) // Ajout du modificateur focused
                         .onChange(of: name) { oldValue, newValue in
                             nameEdited = true
                             // Vérifier les similitudes dès que le nom change
@@ -70,7 +72,6 @@ struct AddNewArticleView: View {
                         }
                     }
                 }
-                
                 // Suppression de la remarque sur l'article alimentaire en contexte recette
             }
             .navigationTitle(forRecipe ? "Nouvel ingrédient" : "Nouvel article")
@@ -122,6 +123,12 @@ struct AddNewArticleView: View {
                         }
                     }
                 )
+            }
+            .onAppear {
+                // Activer le focus après un court délai
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    isNameFieldFocused = true
+                }
             }
         }
     }

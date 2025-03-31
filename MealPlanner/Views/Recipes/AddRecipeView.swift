@@ -5,9 +5,10 @@ import PhotosUI
 struct AddRecipeView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    
     @State private var viewModel: RecipeViewModel?
     @State private var selectedItem: PhotosPickerItem?
+    // Ajout de la variable pour le focus
+    @FocusState private var isNameFieldFocused: Bool
     
     // Nouveau: On utilise un Binding pour contrôler la navigation externe
     var onRecipeCreated: ((Recipe) -> Void)?
@@ -21,6 +22,7 @@ struct AddRecipeView: View {
                             get: { vm.newRecipeName },
                             set: { vm.newRecipeName = $0 }
                         ))
+                        .focused($isNameFieldFocused) // Ajout du modificateur focused
                         
                         TextField("Description (optionnelle)", text: Binding(
                             get: { vm.newRecipeDetails },
@@ -65,7 +67,6 @@ struct AddRecipeView: View {
                         Button("Créer la recette") {
                             if let recipe = vm.createRecipe() {
                                 dismiss()
-                                
                                 // Appeler le callback pour naviguer vers la vue détaillée
                                 onRecipeCreated?(recipe)
                             }
@@ -89,6 +90,10 @@ struct AddRecipeView: View {
                 if viewModel == nil {
                     viewModel = RecipeViewModel(modelContext: modelContext)
                 }
+                // Activer le focus après un court délai
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    isNameFieldFocused = true
+                }
             }
         }
     }
@@ -100,7 +105,6 @@ struct AddRecipeView: View {
         for: Recipe.self, Article.self, RecipeArticle.self,
         configurations: config
     )
-    
-    AddRecipeView()
+    return AddRecipeView()
         .modelContainer(container)
 }
