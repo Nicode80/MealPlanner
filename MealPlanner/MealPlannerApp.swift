@@ -14,6 +14,6 @@ struct MealPlannerApp: App {
             RecipeArticle.self,
             ShoppingList.self,
             ShoppingListItem.self
-        ], inMemory: false)
+        ], inMemory: ProcessInfo.processInfo.arguments.contains("-UITesting"))
     }
 }

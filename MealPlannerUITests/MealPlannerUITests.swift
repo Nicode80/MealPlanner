@@ -1,43 +1,106 @@
-//
-//  MealPlannerUITests.swift
-//  MealPlannerUITests
-//
-//  Created by Nicolas Constantin on 20/03/2025.
-//
-
 import XCTest
 
 final class MealPlannerUITests: XCTestCase {
-
+    
+    var app: XCUIApplication!
+    
     override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
-
-        // In UI tests it is usually best to stop immediately when a failure occurs.
         continueAfterFailure = false
-
-        // In UI tests it’s important to set the initial state - such as interface orientation - required for your tests before they run. The setUp method is a good place to do this.
-    }
-
-    override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
-    }
-
-    @MainActor
-    func testExample() throws {
-        // UI tests must launch the application that they test.
-        let app = XCUIApplication()
+        app = XCUIApplication()
+        
+        // Mettre l'app en mode test pour utiliser une base de données en mémoire
+        app.launchArguments = ["-UITesting"]
         app.launch()
-
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
     }
-
+    
+    override func tearDownWithError() throws {
+        // Code exécuté après chaque test
+    }
+    
     @MainActor
-    func testLaunchPerformance() throws {
-        if #available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 7.0, *) {
-            // This measures how long it takes to launch your application.
-            measure(metrics: [XCTApplicationLaunchMetric()]) {
-                XCUIApplication().launch()
+    func testRecipeListExists() throws {
+        // Un test simple pour vérifier que l'onglet Recettes existe et peut être ouvert
+        app.tabBars.buttons["Recettes"].tap()
+        XCTAssertTrue(app.navigationBars["Mes Recettes"].exists, "L'écran des recettes devrait être visible")
+    }
+    
+    @MainActor
+    func testAddNewRecipe() throws {
+        // Navigation vers l'onglet Recettes
+        app.tabBars.buttons["Recettes"].tap()
+        
+        // Ajouter une nouvelle recette
+        app.navigationBars["Mes Recettes"].buttons["Ajouter"].tap()
+        
+        // Remplir le formulaire
+        let nameTextField = app.textFields["Nom de la recette"]
+        if nameTextField.exists {
+            nameTextField.tap()
+            nameTextField.typeText("Pasta a la norma")
+            
+            let descriptionTextField = app.textFields["Description (optionnelle)"]
+            if descriptionTextField.exists {
+                descriptionTextField.tap()
+                descriptionTextField.typeText("Une recette italienne classique")
             }
+            
+            // Créer la recette
+            app.buttons["Créer la recette"].tap()
+            
+            // Vérifier que la recette est créée et visible dans la liste
+            XCTAssertTrue(app.staticTexts["Pasta a la norma"].exists)
+        } else {
+            XCTFail("Le champ de nom de recette n'est pas visible")
         }
+    }
+    
+    @MainActor
+    func testCreateEmptyRecipe() throws {
+        // Test pour créer une recette sans ingrédients et vérifier qu'elle est marquée comme incomplète
+        
+        // Navigation vers l'onglet Recettes
+        app.tabBars.buttons["Recettes"].tap()
+        
+        // Ajouter une nouvelle recette
+        app.navigationBars["Mes Recettes"].buttons["Ajouter"].tap()
+        
+        // Remplir le formulaire
+        let nameTextField = app.textFields["Nom de la recette"]
+        nameTextField.tap()
+        nameTextField.typeText("Recette vide")
+        
+        // Créer la recette sans ingrédients
+        app.buttons["Créer la recette"].tap()
+        
+        // Important: La recette est ouverte automatiquement après création
+        // Nous devons donc revenir à la liste des recettes
+        
+        // Revenir à la liste des recettes en utilisant le bouton back
+        let backButton = app.navigationBars.buttons.element(boundBy: 0) // Premier bouton de la barre de navigation
+        XCTAssertTrue(backButton.exists, "Le bouton retour devrait être visible")
+        backButton.tap()
+        
+        // Attendre que la liste des recettes apparaisse
+        let recipesList = app.navigationBars["Mes Recettes"]
+        let listAppears = recipesList.waitForExistence(timeout: 5)
+        XCTAssertTrue(listAppears, "La liste des recettes devrait être visible après retour")
+        
+        // Chercher la recette vide dans la liste
+        let recipeCell = app.staticTexts["Recette vide"]
+        XCTAssertTrue(recipeCell.exists, "La recette 'Recette vide' devrait être visible dans la liste")
+        
+        // Maintenant, vérifier si le badge "Incomplet" est présent près de la recette
+        // Utiliser une approche par proximité spatiale
+        
+        // Vérifier directement si le texte "Incomplet" est visible dans l'écran
+        let incompleteBadge = app.staticTexts["Incomplet"]
+        
+        // Prendre une capture d'écran pour le débogage
+        let screenshot = XCUIScreen.main.screenshot()
+        let attachment = XCTAttachment(screenshot: screenshot)
+        attachment.lifetime = .keepAlways
+        add(attachment)
+        
+        XCTAssertTrue(incompleteBadge.exists, "Le badge 'Incomplet' devrait être visible près de la recette vide")
     }
 }
