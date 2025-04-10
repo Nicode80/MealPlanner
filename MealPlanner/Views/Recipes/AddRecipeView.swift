@@ -7,8 +7,16 @@ struct AddRecipeView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var viewModel: RecipeViewModel?
     @State private var selectedItem: PhotosPickerItem?
+    
     // Ajout de la variable pour le focus
     @FocusState private var isNameFieldFocused: Bool
+    
+    // États pour le suivi de l'optimisation des images
+    @State private var originalImageData: Data?
+    @State private var originalImageSize: CGSize = .zero
+    @State private var optimizedImageData: Data?
+    @State private var optimizedImageSize: CGSize = .zero
+    @State private var showOptimizationResult = false
     
     // Nouveau: On utilise un Binding pour contrôler la navigation externe
     var onRecipeCreated: ((Recipe) -> Void)?
@@ -47,8 +55,46 @@ struct AddRecipeView: View {
                             .onChange(of: selectedItem) { _, newItem in
                                 if let newItem {
                                     Task {
-                                        if let data = try? await newItem.loadTransferable(type: Data.self) {
-                                            vm.newRecipePhotoData = data
+                                        if let data = try? await newItem.loadTransferable(type: Data.self),
+                                           let originalImage = UIImage(data: data) {
+                                            
+                                            // Stocker les informations de l'image originale
+                                            await MainActor.run {
+                                                originalImageData = data
+                                                originalImageSize = originalImage.size
+                                            }
+                                            
+                                            print("Image originale chargée: \(originalImage.size.width) × \(originalImage.size.height), \(data.count) bytes")
+                                            
+                                            // Optimiser l'image
+                                            if let optimizedData = originalImage.optimizedImageData() {
+                                                // Récupérer l'image optimisée pour voir ses dimensions
+                                                if let optimizedImage = UIImage(data: optimizedData) {
+                                                    print("Image optimisée créée: \(optimizedImage.size.width) × \(optimizedImage.size.height), \(optimizedData.count) bytes")
+                                                    
+                                                    await MainActor.run {
+                                                        // Mettre à jour les variables d'état avec les données optimisées
+                                                        optimizedImageData = optimizedData
+                                                        optimizedImageSize = optimizedImage.size
+                                                        
+                                                        // Affecter au ViewModel
+                                                        vm.newRecipePhotoData = optimizedData
+                                                        
+                                                        // Afficher les résultats
+                                                        showOptimizationResult = true
+                                                    }
+                                                } else {
+                                                    print("Erreur: Impossible de créer l'image optimisée")
+                                                    await MainActor.run {
+                                                        vm.newRecipePhotoData = data
+                                                    }
+                                                }
+                                            } else {
+                                                print("Erreur: Échec de l'optimisation")
+                                                await MainActor.run {
+                                                    vm.newRecipePhotoData = data
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -94,6 +140,14 @@ struct AddRecipeView: View {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     isNameFieldFocused = true
                 }
+            }
+            .sheet(isPresented: $showOptimizationResult) {
+                OptimizationResultView(
+                    originalData: originalImageData,
+                    originalSize: originalImageSize,
+                    optimizedData: optimizedImageData,
+                    optimizedSize: optimizedImageSize
+                )
             }
         }
     }

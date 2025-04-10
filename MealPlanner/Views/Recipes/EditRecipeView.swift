@@ -11,6 +11,13 @@ struct EditRecipeView: View {
     @State private var selectedItem: PhotosPickerItem?
     @State private var photoData: Data?
     
+    // États pour le suivi de l'optimisation des images
+    @State private var originalImageData: Data?
+    @State private var originalImageSize: CGSize = .zero
+    @State private var optimizedImageData: Data?
+    @State private var optimizedImageSize: CGSize = .zero
+    @State private var showOptimizationResult = false
+    
     init(recipe: Recipe) {
         self.recipe = recipe
         _name = State(initialValue: recipe.name)
@@ -44,8 +51,46 @@ struct EditRecipeView: View {
                         .onChange(of: selectedItem) { _, newItem in
                             if let newItem {
                                 Task {
-                                    if let data = try? await newItem.loadTransferable(type: Data.self) {
-                                        photoData = data
+                                    if let data = try? await newItem.loadTransferable(type: Data.self),
+                                       let originalImage = UIImage(data: data) {
+                                        
+                                        // Stocker les informations de l'image originale
+                                        await MainActor.run {
+                                            originalImageData = data
+                                            originalImageSize = originalImage.size
+                                        }
+                                        
+                                        print("Image originale chargée: \(originalImage.size.width) × \(originalImage.size.height), \(data.count) bytes")
+                                        
+                                        // Optimiser l'image
+                                        if let optimizedData = originalImage.optimizedImageData() {
+                                            // Récupérer l'image optimisée pour voir ses dimensions
+                                            if let optimizedImage = UIImage(data: optimizedData) {
+                                                print("Image optimisée créée: \(optimizedImage.size.width) × \(optimizedImage.size.height), \(optimizedData.count) bytes")
+                                                
+                                                await MainActor.run {
+                                                    // Mettre à jour les variables d'état avec les données optimisées
+                                                    optimizedImageData = optimizedData
+                                                    optimizedImageSize = optimizedImage.size
+                                                    
+                                                    // Affecter à la variable de vue
+                                                    photoData = optimizedData
+                                                    
+                                                    // Afficher les résultats
+                                                    showOptimizationResult = true
+                                                }
+                                            } else {
+                                                print("Erreur: Impossible de créer l'image optimisée")
+                                                await MainActor.run {
+                                                    photoData = data
+                                                }
+                                            }
+                                        } else {
+                                            print("Erreur: Échec de l'optimisation")
+                                            await MainActor.run {
+                                                photoData = data
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -74,6 +119,14 @@ struct EditRecipeView: View {
                         dismiss()
                     }
                 }
+            }
+            .sheet(isPresented: $showOptimizationResult) {
+                OptimizationResultView(
+                    originalData: originalImageData,
+                    originalSize: originalImageSize,
+                    optimizedData: optimizedImageData,
+                    optimizedSize: optimizedImageSize
+                )
             }
         }
     }

@@ -9,6 +9,8 @@ struct RecipeListView: View {
     @State private var navigateToDetail = false
     @State private var recipeToAddToPlanner: Recipe? = nil
     @State private var searchText = ""
+    //Pour tester optimisation image
+    @State private var showingImageOptimizationTest = false
     
     // Accéder au gestionnaire partagé du planning
     @ObservedObject private var plannerManager = PlannerManager.shared
@@ -96,6 +98,14 @@ struct RecipeListView: View {
                 }
                 .disabled(viewModel == nil)
             }
+            //Pour tester resize image
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button {
+                    showingImageOptimizationTest = true
+                } label: {
+                    Label("Test Image", systemImage: "photo.badge.plus")
+                }
+            }
         }
         .sheet(isPresented: $showingAddRecipe) {
             AddRecipeView(onRecipeCreated: { recipe in
@@ -112,6 +122,11 @@ struct RecipeListView: View {
                 addToPlannerAndUpdateList(recipe: recipe, day: day, mealType: mealType, people: people)
             }
         }
+        //Pour tester resize image
+        .sheet(isPresented: $showingImageOptimizationTest) {
+            ImageOptimizationTestView()
+        }
+        
         .onAppear {
             // Initialiser le ViewModel avec le modelContext de l'environment
             if viewModel == nil {
