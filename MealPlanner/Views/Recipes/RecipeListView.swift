@@ -9,12 +9,9 @@ struct RecipeListView: View {
     @State private var navigateToDetail = false
     @State private var recipeToAddToPlanner: Recipe? = nil
     @State private var searchText = ""
-    //Pour tester optimisation image
-    @State private var showingImageOptimizationTest = false
     
     // Accéder au gestionnaire partagé du planning
     @ObservedObject private var plannerManager = PlannerManager.shared
-    
     @Query private var shoppingLists: [ShoppingList]
     @Query private var allRecipes: [Recipe]
     
@@ -22,11 +19,9 @@ struct RecipeListView: View {
         guard let vm = viewModel else {
             return []
         }
-        
         if searchText.isEmpty {
             return vm.recipes
         }
-        
         return vm.recipes.filter { recipe in
             recipe.name.localizedCaseInsensitiveContains(searchText) ||
             (recipe.details?.localizedCaseInsensitiveContains(searchText) ?? false)
@@ -98,14 +93,6 @@ struct RecipeListView: View {
                 }
                 .disabled(viewModel == nil)
             }
-            //Pour tester resize image
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button {
-                    showingImageOptimizationTest = true
-                } label: {
-                    Label("Test Image", systemImage: "photo.badge.plus")
-                }
-            }
         }
         .sheet(isPresented: $showingAddRecipe) {
             AddRecipeView(onRecipeCreated: { recipe in
@@ -122,11 +109,6 @@ struct RecipeListView: View {
                 addToPlannerAndUpdateList(recipe: recipe, day: day, mealType: mealType, people: people)
             }
         }
-        //Pour tester resize image
-        .sheet(isPresented: $showingImageOptimizationTest) {
-            ImageOptimizationTestView()
-        }
-        
         .onAppear {
             // Initialiser le ViewModel avec le modelContext de l'environment
             if viewModel == nil {
@@ -146,8 +128,10 @@ struct RecipeListView: View {
     
     private func deleteRecipes(at offsets: IndexSet) {
         guard let vm = viewModel else { return }
+        
         // Convertir les indices de la liste filtrée en indices réels
         let recipesToDelete = offsets.map { filteredRecipes[$0] }
+        
         for recipe in recipesToDelete {
             vm.deleteRecipe(recipe)
         }
@@ -190,7 +174,6 @@ extension Recipe: Identifiable {}
 struct PlannerAddView: View {
     let recipe: Recipe
     let onAdd: (Int, PlannedMeal.MealType, Int) -> Void
-    
     @State private var selectedDay = 0
     @State private var selectedMealType = PlannedMeal.MealType.dinner
     @State private var numberOfPeople = 2
