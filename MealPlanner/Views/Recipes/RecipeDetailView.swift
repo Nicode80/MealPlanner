@@ -4,7 +4,6 @@ import SwiftData
 struct RecipeDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @Bindable var recipe: Recipe
-    
     @State private var showingAddIngredient = false
     @State private var showingEditRecipe = false
     
@@ -15,18 +14,24 @@ struct RecipeDetailView: View {
                 if let photoData = recipe.photo, let uiImage = UIImage(data: photoData) {
                     Image(uiImage: uiImage)
                         .resizable()
-                        .scaledToFit()
-                        .frame(maxHeight: 200)
-                        .cornerRadius(10)
+                        .aspectRatio(contentMode: .fill) // Remplir tout l'espace disponible
+                        .frame(maxWidth: .infinity, maxHeight: 200) // Largeur infinie, hauteur fixe
+                        .clipped() // Rogner ce qui dépasse
+                        .cornerRadius(10) // Conserver les coins arrondis
                 } else {
-                    Image(systemName: "photo")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(maxHeight: 200)
-                        .padding()
-                        .foregroundColor(.secondary)
-                        .background(Color(.systemGray6))
-                        .cornerRadius(10)
+                    // Placeholder quand il n'y a pas d'image
+                    ZStack {
+                        Rectangle()
+                            .foregroundColor(Color(.systemGray6))
+                            .frame(maxWidth: .infinity, maxHeight: 200)
+                            .cornerRadius(10)
+                        
+                        Image(systemName: "photo")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 60, height: 60)
+                            .foregroundColor(.secondary)
+                    }
                 }
                 
                 // Description
@@ -67,6 +72,7 @@ struct RecipeDetailView: View {
                                             .foregroundColor(.secondary)
                                             .italic()
                                     }
+                                    
                                     Button {
                                         removeIngredient(recipeArticle)
                                     } label: {
@@ -130,44 +136,5 @@ struct RecipeDetailView: View {
             recipe.ingredients?.remove(at: index)
             modelContext.delete(recipeArticle)
         }
-    }
-}
-
-struct RecipeDetailView_Previews: PreviewProvider {
-    static var previews: some View {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
-        let container = try! ModelContainer(
-            for: Recipe.self, Article.self, RecipeArticle.self,
-            configurations: config
-        )
-        let context = container.mainContext
-        
-        // Créer un exemple de recette
-        let recipe = Recipe(name: "Pâtes à la carbonara", details: "Un classique italien facile et délicieux.")
-        let spaghetti = Article(name: "Spaghetti", category: "Épicerie salée", unit: "g", isFood: true)
-        let bacon = Article(name: "Lardons", category: "Viandes", unit: "g", isFood: true)
-        let egg = Article(name: "Œuf", category: "Produits laitiers", unit: "pièce(s)", isFood: true)
-        let cheese = Article(name: "Parmesan", category: "Produits laitiers", unit: "g", isFood: true)
-        
-        context.insert(recipe)
-        context.insert(spaghetti)
-        context.insert(bacon)
-        context.insert(egg)
-        context.insert(cheese)
-        
-        let ingredient1 = RecipeArticle(recipe: recipe, article: spaghetti, quantity: 100, isOptional: false)
-        let ingredient2 = RecipeArticle(recipe: recipe, article: bacon, quantity: 50, isOptional: false)
-        let ingredient3 = RecipeArticle(recipe: recipe, article: egg, quantity: 1, isOptional: false)
-        let ingredient4 = RecipeArticle(recipe: recipe, article: cheese, quantity: 20, isOptional: false)
-        
-        context.insert(ingredient1)
-        context.insert(ingredient2)
-        context.insert(ingredient3)
-        context.insert(ingredient4)
-        
-        return NavigationStack {
-            RecipeDetailView(recipe: recipe)
-        }
-        .modelContainer(container)
     }
 }
