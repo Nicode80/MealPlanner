@@ -1,0 +1,646 @@
+[
+  {
+    "name": "Blanquette de veau",
+    "details": "Un plat mijoté traditionnel français, la blanquette de veau est un ragoût de viande en sauce blanche, accompagné de légumes. Un plat réconfortant parfait pour les dîners en famille.",
+    "imageName": "blanquette-de-veau",
+    "ingredients": [
+      {
+        "name": "Veau pour blanquette",
+        "category": "Viandes",
+        "unit": "g",
+        "quantity": 200,
+        "isOptional": false
+      },
+      {
+        "name": "Carotte",
+        "category": "Fruits et légumes",
+        "unit": "pièce(s)",
+        "quantity": 1,
+        "isOptional": false
+      },
+      {
+        "name": "Oignon",
+        "category": "Fruits et légumes",
+        "unit": "pièce(s)",
+        "quantity": 2,
+        "isOptional": false
+      },
+      {
+        "name": "Céleri branche",
+        "category": "Fruits et légumes",
+        "unit": "pièce(s)",
+        "quantity": 1,
+        "isOptional": false
+      },
+      {
+        "name": "Poireau",
+        "category": "Fruits et légumes",
+        "unit": "pièce(s)",
+        "quantity": 1,
+        "isOptional": false
+      },
+      {
+        "name": "Champignon de Paris",
+        "category": "Fruits et légumes",
+        "unit": "g",
+        "quantity": 200,
+        "isOptional": false
+      },
+      {
+        "name": "Thym",
+        "category": "Épices et herbes",
+        "unit": "branche(s)",
+        "quantity": 1,
+        "isOptional": false
+      },
+      {
+        "name": "Laurier",
+        "category": "Épices et herbes",
+        "unit": "feuille(s)",
+        "quantity": 1,
+        "isOptional": false
+      },
+      {
+        "name": "Clous de girofle",
+        "category": "Épices et herbes",
+        "unit": "pièce(s)",
+        "quantity": 2,
+        "isOptional": false
+      },
+      {
+        "name": "Crème fraîche",
+        "category": "Produits laitiers",
+        "unit": "cl",
+        "quantity": 20,
+        "isOptional": false
+      },
+      {
+        "name": "Beurre",
+        "category": "Produits laitiers",
+        "unit": "g",
+        "quantity": 15,
+        "isOptional": false
+      },
+      {
+        "name": "Jaune d'œuf",
+        "category": "Produits laitiers",
+        "unit": "pièce(s)",
+        "quantity": 1,
+        "isOptional": false
+      },
+      {
+        "name": "Jus de citron",
+        "category": "Fruits et légumes",
+        "unit": "cuillère(s) à café",
+        "quantity": 0.5,
+        "isOptional": false
+      },
+      {
+        "name": "Sel",
+        "category": "Épices et herbes",
+        "unit": "pincée(s)",
+        "quantity": 1,
+        "isOptional": false
+      },
+      {
+        "name": "Poivre",
+        "category": "Épices et herbes",
+        "unit": "pincée(s)",
+        "quantity": 1,
+        "isOptional": false
+      }
+    ]
+  },
+  {
+    "name": "Cake aux olives",
+    "details": "Un cake salé délicieux, parfait pour l'apéritif ou comme entrée. Ce cake aux olives est moelleux et savoureux, facile à préparer à l'avance et à servir à température ambiante.",
+    "imageName": "cake-olives",
+    "ingredients": [
+      {
+        "name": "Œuf",
+        "category": "Produits laitiers",
+        "unit": "pièce(s)",
+        "quantity": 3,
+        "isOptional": false
+      },
+      {
+        "name": "Farine",
+        "category": "Épicerie salée",
+        "unit": "g",
+        "quantity": 150,
+        "isOptional": false
+      },
+      {
+        "name": "Levure",
+        "category": "Épicerie salée",
+        "unit": "sachet(s)",
+        "quantity": 0.5,
+        "isOptional": false
+      },
+      {
+        "name": "Huile d'olive",
+        "category": "Épicerie salée",
+        "unit": "ml",
+        "quantity": 100,
+        "isOptional": false
+      },
+      {
+        "name": "Lait",
+        "category": "Produits laitiers",
+        "unit": "ml",
+        "quantity": 125,
+        "isOptional": false
+      },
+      {
+        "name": "Gruyère râpé",
+        "category": "Produits laitiers",
+        "unit": "g",
+        "quantity": 100,
+        "isOptional": false
+      },
+      {
+        "name": "Olives vertes dénoyautées",
+        "category": "Épicerie salée",
+        "unit": "g",
+        "quantity": 100,
+        "isOptional": false
+      },
+      {
+        "name": "Sel",
+        "category": "Épices et herbes",
+        "unit": "pincée(s)",
+        "quantity": 1,
+        "isOptional": false
+      },
+      {
+        "name": "Poivre",
+        "category": "Épices et herbes",
+        "unit": "pincée(s)",
+        "quantity": 1,
+        "isOptional": false
+      }
+    ]
+  },
+  {
+    "name": "Chèvre chaud",
+    "details": "Une entrée classique de la cuisine française. Le chèvre chaud sur toast accompagné d'une salade verte est un équilibre parfait entre le crémeux du fromage, le croquant du pain et la fraîcheur de la salade.",
+    "imageName": "chevre-chaud",
+    "ingredients": [
+      {
+        "name": "Chèvre",
+        "category": "Produits laitiers",
+        "unit": "pièce(s)",
+        "quantity": 1,
+        "isOptional": false
+      },
+      {
+        "name": "Miel",
+        "category": "Épicerie sucrée",
+        "unit": "cuillère(s) à café",
+        "quantity": 1,
+        "isOptional": false
+      },
+      {
+        "name": "Pain",
+        "category": "Boulangerie",
+        "unit": "tranche(s)",
+        "quantity": 2,
+        "isOptional": false
+      },
+      {
+        "name": "Salade verte",
+        "category": "Fruits et légumes",
+        "unit": "g",
+        "quantity": 100,
+        "isOptional": true
+      },
+      {
+        "name": "Tomates cerises",
+        "category": "Fruits et légumes",
+        "unit": "pièce(s)",
+        "quantity": 10,
+        "isOptional": true
+      },
+      {
+        "name": "Noix",
+        "category": "Fruits et légumes",
+        "unit": "pièce(s)",
+        "quantity": 5,
+        "isOptional": true
+      },
+      {
+        "name": "Vinaigrette",
+        "category": "Épicerie salée",
+        "unit": "cuillère(s) à soupe",
+        "quantity": 2,
+        "isOptional": true
+      }
+    ]
+  },
+  {
+    "name": "Côte de veau aux champignons",
+    "details": "Un plat gourmand et raffiné, la côte de veau aux champignons offre une viande tendre nappée d'une sauce crémeuse aux champignons. Un mets délicat qui impressionnera vos convives.",
+    "imageName": "cote-veau-champignons",
+    "ingredients": [
+      {
+        "name": "Côte de veau",
+        "category": "Viandes",
+        "unit": "pièce(s)",
+        "quantity": 1,
+        "isOptional": false
+      },
+      {
+        "name": "Champignon de Paris",
+        "category": "Fruits et légumes",
+        "unit": "g",
+        "quantity": 250,
+        "isOptional": false
+      },
+      {
+        "name": "Échalote",
+        "category": "Fruits et légumes",
+        "unit": "pièce(s)",
+        "quantity": 1,
+        "isOptional": false
+      },
+      {
+        "name": "Crème fraîche",
+        "category": "Produits laitiers",
+        "unit": "cl",
+        "quantity": 20,
+        "isOptional": false
+      },
+      {
+        "name": "Vin blanc",
+        "category": "Boissons",
+        "unit": "ml",
+        "quantity": 10,
+        "isOptional": false
+      },
+      {
+        "name": "Beurre",
+        "category": "Produits laitiers",
+        "unit": "g",
+        "quantity": 20,
+        "isOptional": false
+      },
+      {
+        "name": "Persil",
+        "category": "Épices et herbes",
+        "unit": "branche(s)",
+        "quantity": 1,
+        "isOptional": false
+      },
+      {
+        "name": "Sel",
+        "category": "Épices et herbes",
+        "unit": "pincée(s)",
+        "quantity": 1,
+        "isOptional": false
+      },
+      {
+        "name": "Poivre",
+        "category": "Épices et herbes",
+        "unit": "pincée(s)",
+        "quantity": 1,
+        "isOptional": false
+      }
+    ]
+  },
+  {
+    "name": "Côtes de porc",
+    "details": "Un plat simple et savoureux, les côtes de porc sont caramélisées avec une sauce miel-moutarde qui leur apporte douceur et caractère. Idéal pour un repas familial rapide et satisfaisant.",
+    "imageName": "cotes-de-porc",
+    "ingredients": [
+      {
+        "name": "Côtes de porc",
+        "category": "Viandes",
+        "unit": "pièce(s)",
+        "quantity": 1,
+        "isOptional": false
+      },
+      {
+        "name": "Miel",
+        "category": "Épicerie sucrée",
+        "unit": "cuillère(s) à soupe",
+        "quantity": 2,
+        "isOptional": false
+      },
+      {
+        "name": "Moutarde",
+        "category": "Épicerie salée",
+        "unit": "cuillère(s) à café",
+        "quantity": 1,
+        "isOptional": false
+      },
+      {
+        "name": "Vinaigre balsamique",
+        "category": "Épicerie salée",
+        "unit": "cuillère(s) à soupe",
+        "quantity": 2,
+        "isOptional": false
+      },
+      {
+        "name": "Huile d'olive",
+        "category": "Épicerie salée",
+        "unit": "cuillère(s) à soupe",
+        "quantity": 3,
+        "isOptional": false
+      },
+      {
+        "name": "Sel",
+        "category": "Épices et herbes",
+        "unit": "pincée(s)",
+        "quantity": 1,
+        "isOptional": false
+      },
+      {
+        "name": "Poivre",
+        "category": "Épices et herbes",
+        "unit": "pincée(s)",
+        "quantity": 1,
+        "isOptional": false
+      }
+    ]
+  },
+  {
+    "name": "Dos de cabillaud",
+    "details": "Un plat léger et élégant, le dos de cabillaud est cuit à la perfection et nappé d'une sauce crémeuse au paprika. Une façon délicieuse de savourer ce poisson à la chair tendre et délicate.",
+    "imageName": "dos-cabillaud",
+    "ingredients": [
+      {
+        "name": "Dos de cabillaud",
+        "category": "Poissons et fruits de mer",
+        "unit": "pièce(s)",
+        "quantity": 1,
+        "isOptional": false
+      },
+      {
+        "name": "Paprika",
+        "category": "Épices et herbes",
+        "unit": "cuillère(s) à café",
+        "quantity": 1,
+        "isOptional": false
+      },
+      {
+        "name": "Crème fraîche",
+        "category": "Produits laitiers",
+        "unit": "cl",
+        "quantity": 20,
+        "isOptional": false
+      },
+      {
+        "name": "Parmesan",
+        "category": "Produits laitiers",
+        "unit": "g",
+        "quantity": 20,
+        "isOptional": false
+      },
+      {
+        "name": "Sel",
+        "category": "Épices et herbes",
+        "unit": "pincée(s)",
+        "quantity": 1,
+        "isOptional": false
+      },
+      {
+        "name": "Poivre",
+        "category": "Épices et herbes",
+        "unit": "pincée(s)",
+        "quantity": 1,
+        "isOptional": false
+      }
+    ]
+  },
+  {
+    "name": "Filet mignon",
+    "details": "Une pièce de viande noble et tendre, le filet mignon est préparé simplement avec du beurre et des herbes pour en préserver toute la saveur. Un plat élégant qui demande peu de préparation.",
+    "imageName": "filet-mignon",
+    "ingredients": [
+      {
+        "name": "Filet mignon",
+        "category": "Viandes",
+        "unit": "pièce(s)",
+        "quantity": 1,
+        "isOptional": false
+      },
+      {
+        "name": "Beurre",
+        "category": "Produits laitiers",
+        "unit": "g",
+        "quantity": 40,
+        "isOptional": false
+      },
+      {
+        "name": "Thym",
+        "category": "Épices et herbes",
+        "unit": "branche(s)",
+        "quantity": 2,
+        "isOptional": false
+      },
+      {
+        "name": "Romarin",
+        "category": "Épices et herbes",
+        "unit": "branche(s)",
+        "quantity": 2,
+        "isOptional": false
+      },
+      {
+        "name": "Sel",
+        "category": "Épices et herbes",
+        "unit": "pincée(s)",
+        "quantity": 1,
+        "isOptional": false
+      },
+      {
+        "name": "Poivre",
+        "category": "Épices et herbes",
+        "unit": "pincée(s)",
+        "quantity": 1,
+        "isOptional": false
+      }
+    ]
+  },
+  {
+    "name": "Galette complète",
+    "details": "Un classique de la cuisine bretonne, la galette complète combine œuf, jambon et fromage dans une crêpe de sarrasin croustillante. Un repas complet, rapide et savoureux à tout moment de la journée.",
+    "imageName": "galette-complete",
+    "ingredients": [
+      {
+        "name": "Farine de sarrasin",
+        "category": "Épicerie salée",
+        "unit": "g",
+        "quantity": 330,
+        "isOptional": false
+      },
+      {
+        "name": "Œuf",
+        "category": "Produits laitiers",
+        "unit": "pièce(s)",
+        "quantity": 1,
+        "isOptional": false
+      },
+      {
+        "name": "Eau",
+        "category": "Boissons",
+        "unit": "cl",
+        "quantity": 75,
+        "isOptional": false
+      },
+      {
+        "name": "Sel",
+        "category": "Épices et herbes",
+        "unit": "pincée(s)",
+        "quantity": 1,
+        "isOptional": false
+      },
+      {
+        "name": "Jambon",
+        "category": "Viandes",
+        "unit": "tranche(s)",
+        "quantity": 1,
+        "isOptional": false
+      },
+      {
+        "name": "Œuf (pour la garniture)",
+        "category": "Produits laitiers",
+        "unit": "pièce(s)",
+        "quantity": 1,
+        "isOptional": false
+      },
+      {
+        "name": "Gruyère râpé",
+        "category": "Produits laitiers",
+        "unit": "g",
+        "quantity": 50,
+        "isOptional": false
+      }
+    ]
+  },
+  {
+    "name": "Gratin de chou-fleur",
+    "details": "Un accompagnement réconfortant, le gratin de chou-fleur mêle la douceur du légume à l'onctuosité de la crème et du fromage. Un plat qui séduira même les plus réticents aux légumes.",
+    "imageName": "gratin-chou-fleur",
+    "ingredients": [
+      {
+        "name": "Chou-fleur",
+        "category": "Fruits et légumes",
+        "unit": "pièce(s)",
+        "quantity": 0.5,
+        "isOptional": false
+      },
+      {
+        "name": "Crème fraîche",
+        "category": "Produits laitiers",
+        "unit": "cl",
+        "quantity": 20,
+        "isOptional": false
+      },
+      {
+        "name": "Gruyère râpé",
+        "category": "Produits laitiers",
+        "unit": "g",
+        "quantity": 100,
+        "isOptional": false
+      },
+      {
+        "name": "Sel",
+        "category": "Épices et herbes",
+        "unit": "pincée(s)",
+        "quantity": 1,
+        "isOptional": false
+      },
+      {
+        "name": "Poivre",
+        "category": "Épices et herbes",
+        "unit": "pincée(s)",
+        "quantity": 1,
+        "isOptional": false
+      },
+      {
+        "name": "Muscade",
+        "category": "Épices et herbes",
+        "unit": "pincée(s)",
+        "quantity": 1,
+        "isOptional": true
+      }
+    ]
+  },
+  {
+    "name": "Hachis parmentier",
+    "details": "Un grand classique de la cuisine familiale française, le hachis parmentier est composé d'une couche de viande hachée recouverte d'une purée de pommes de terre gratinée. Un plat complet et réconfortant.",
+    "imageName": "hachis-parmentier",
+    "ingredients": [
+      {
+        "name": "Viande de bœuf hachée",
+        "category": "Viandes",
+        "unit": "g",
+        "quantity": 200,
+        "isOptional": false
+      },
+      {
+        "name": "Pomme de terre",
+        "category": "Fruits et légumes",
+        "unit": "g",
+        "quantity": 400,
+        "isOptional": false
+      },
+      {
+        "name": "Oignon",
+        "category": "Fruits et légumes",
+        "unit": "pièce(s)",
+        "quantity": 0.5,
+        "isOptional": false
+      },
+      {
+        "name": "Carotte",
+        "category": "Fruits et légumes",
+        "unit": "pièce(s)",
+        "quantity": 1,
+        "isOptional": false
+      },
+      {
+        "name": "Lait",
+        "category": "Produits laitiers",
+        "unit": "cl",
+        "quantity": 10,
+        "isOptional": false
+      },
+      {
+        "name": "Beurre",
+        "category": "Produits laitiers",
+        "unit": "g",
+        "quantity": 20,
+        "isOptional": false
+      },
+      {
+        "name": "Crème fraîche",
+        "category": "Produits laitiers",
+        "unit": "cl",
+        "quantity": 10,
+        "isOptional": false
+      },
+      {
+        "name": "Gruyère râpé",
+        "category": "Produits laitiers",
+        "unit": "g",
+        "quantity": 50,
+        "isOptional": false
+      },
+      {
+        "name": "Sel",
+        "category": "Épices et herbes",
+        "unit": "pincée(s)",
+        "quantity": 1,
+        "isOptional": false
+      },
+      {
+        "name": "Poivre",
+        "category": "Épices et herbes",
+        "unit": "pincée(s)",
+        "quantity": 1,
+        "isOptional": false
+      }
+    ]
+  }
+]
