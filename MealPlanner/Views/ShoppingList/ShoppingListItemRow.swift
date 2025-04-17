@@ -72,9 +72,10 @@ struct ShoppingListItemRow: View {
                     .buttonStyle(BorderlessButtonStyle())
                 }
             } else {
-                // Mode normal: afficher la quantité
+                // Mode normal: afficher la quantité convertie pour les courses
                 HStack {
-                    Text("\(String(format: "%.1f", item.quantity)) \(item.article?.unit ?? "")")
+                    // Utiliser formattedShoppingQuantity au lieu de l'affichage direct
+                    Text(item.formattedShoppingQuantity)
                         .foregroundColor(.secondary)
                     
                     Button {
@@ -102,7 +103,7 @@ struct ShoppingListItemRow: View {
     
     // Détermine si une unité utilise des valeurs décimales
     private func isDecimalUnit(_ unit: String) -> Bool {
-        return ["kg", "l"].contains(unit)
+        return ["kg", "l", "L"].contains(unit)
     }
     
     // Obtient le pas d'incrémentation pour une unité donnée
